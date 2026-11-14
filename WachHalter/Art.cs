@@ -266,26 +266,15 @@ static class Art
         g.FillEllipse(cut, cx - radius * 0.35f, cy - radius * 1.25f, cr * 2, cr * 2);
     }
 
-    /// <summary>Tray-Symbol: aktiv = App-Icon mit wachen Augen; inaktiv = verschlafen und halb transparent.</summary>
+    /// <summary>
+    /// Tray-Symbol in voller Farbe (gut sichtbar auch auf dunkler Taskleiste):
+    /// aktiv = wache Augen, inaktiv = verschlafene Augen.
+    /// </summary>
     public static Icon CreateTrayIcon(bool active)
     {
         using var bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
         using (var g = Graphics.FromImage(bmp))
-        {
-            if (active)
-            {
-                DrawAppIcon(g, new RectangleF(0, 0, 32, 32));
-            }
-            else
-            {
-                using var plain = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
-                using (var pg = Graphics.FromImage(plain))
-                    DrawAppIcon(pg, new RectangleF(0, 0, 32, 32), awake: false);
-                using var faded = new ImageAttributes();
-                faded.SetColorMatrix(new ColorMatrix { Matrix33 = 0.55f });
-                g.DrawImage(plain, new Rectangle(0, 0, 32, 32), 0, 0, 32, 32, GraphicsUnit.Pixel, faded);
-            }
-        }
+            DrawAppIcon(g, new RectangleF(0, 0, 32, 32), awake: active);
 
         IntPtr handle = bmp.GetHicon();
         try
