@@ -21,17 +21,22 @@ static class Program
             return;
         }
 
+        // Vor dem ersten Fenster (auch vor der Meldung unten): scharfe Darstellung bei
+        // Skalierung > 100 % und moderne Windows-Steuerelemente
+        SetProcessDPIAware();
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+
         using var mutex = new Mutex(true, @"Local\WachHalter_SingleInstance", out bool isFirst);
         if (!isFirst)
         {
-            MessageBox.Show("WachHalter läuft bereits – siehe Infobereich der Taskleiste.",
-                "WachHalter", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(
+                "WachHalter läuft bereits.\n\n" +
+                "Klicke auf das Tassen-Symbol im Infobereich der Taskleiste, um das Fenster zu öffnen.",
+                "WachHalter", MessageBoxButtons.OK, MessageBoxIcon.None);
             return;
         }
 
-        SetProcessDPIAware(); // scharfe Darstellung bei Skalierung > 100 %
-        Application.EnableVisualStyles();
-        Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new TrayApp());
     }
 }

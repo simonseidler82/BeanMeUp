@@ -1,10 +1,9 @@
-using System.Reflection;
 using Microsoft.Win32;
 
 namespace WachHalter;
 
 /// <summary>
-/// Die App: Tray-Icon (Menü nur "Anzeigen / Verbergen") plus Hauptfenster mit allen Einstellungen.
+/// Die App: Tray-Icon (ein Klick öffnet das Hauptfenster) plus Hauptfenster mit allen Einstellungen.
 /// </summary>
 sealed class TrayApp : ApplicationContext
 {
@@ -20,8 +19,6 @@ sealed class TrayApp : ApplicationContext
     readonly Icon _iconOn = Art.CreateTrayIcon(active: true);
     readonly Icon _iconOff = Art.CreateTrayIcon(active: false);
     readonly SynchronizationContext _ui;
-    readonly ToolStripMenuItem _miShow = new("Anzeigen");
-    readonly ToolStripMenuItem _miHide = new("Verbergen");
     SettingsForm? _settingsForm;
     HelpForm? _helpForm;
 
@@ -32,24 +29,14 @@ sealed class TrayApp : ApplicationContext
             Awake.Start(null, Settings.KeepDisplayOn);
         Theme.Tick();
 
-        var menu = new ContextMenuStrip();
-        _miShow.Font = new Font(_miShow.Font, FontStyle.Bold);
-        menu.Items.AddRange([_miShow, _miHide]);
-        // ContextMenuStrip hat den WinForms-SynchronizationContext installiert
+        _window = new MainWindow(this);
+        // Das Fenster hat den WinForms-SynchronizationContext installiert
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
-        _window = new MainWindow(this);
-        _miShow.Click += (_, _) => _window.ShowWindow(autoHide: false);
-        _miHide.Click += (_, _) => _window.HideWindow();
-        menu.Opening += (_, _) =>
-        {
-            _miShow.Enabled = !_window.Visible;
-            _miHide.Enabled = _window.Visible;
-        };
-
-        _tray = new NotifyIcon { ContextMenuStrip = menu, Icon = _iconOff, Text = "WachHalter", Visible = true };
-        // Auch Linksklick öffnet das kleine Menü
-        _tray.MouseUp += (_, e) => { if (e.Button == MouseButtons.Left) ShowTrayMenu(); };
+        // Kein Menü: Links- oder Rechtsklick auf das Tray-Symbol öffnet direkt das Fenster.
+        // Beenden gibt es im Fenster selbst.
+        _tray = new NotifyIcon { Icon = _iconOff, Text = "WachHalter", Visible = true };
+        _tray.MouseUp += (_, _) => _window.ShowWindow(autoHide: false);
 
         _timer.Tick += (_, _) => OnTick();
         _timer.Start();
@@ -58,10 +45,6 @@ sealed class TrayApp : ApplicationContext
 
         _window.ShowWindow(autoHide: true);
     }
-
-    void ShowTrayMenu() =>
-        typeof(NotifyIcon).GetMethod("ShowContextMenu", BindingFlags.Instance | BindingFlags.NonPublic)
-            ?.Invoke(_tray, null);
 
     // ---------- Aktionen (vom Hauptfenster aufgerufen) ----------
 

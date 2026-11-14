@@ -148,19 +148,24 @@ sealed class MainWindow : Form
 
     public void ShowWindow(bool autoHide)
     {
+        bool wasHidden = !Visible || _fadingOut;
         _fadingOut = false;
         _autoHide = autoHide;
         _autoHideLeft = AutoHideSeconds;
 
-        var area = Screen.FromPoint(Cursor.Position).WorkingArea;
-        Location = new Point(area.Right - Width - S(12), Math.Max(area.Top, area.Bottom - Height - S(12)));
-
         RefreshState();
+        if (wasHidden)
+        {
+            // Unten rechts über der Taskleiste einblenden (ein verschobenes, offenes Fenster bleibt, wo es ist)
+            var area = Screen.FromPoint(Cursor.Position).WorkingArea;
+            Location = new Point(area.Right - Width - S(12), Math.Max(area.Top, area.Bottom - Height - S(12)));
+        }
         if (!Visible)
         {
             Opacity = 0;
             Show();
         }
+        if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
         Activate();
         _lastTick = _clock.Elapsed.TotalSeconds;
         _anim.Start();

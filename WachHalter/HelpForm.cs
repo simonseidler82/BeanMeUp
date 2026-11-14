@@ -26,8 +26,8 @@ sealed class HelpForm : Form
          "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“."),
         ("Fenster & Infobereich",
          "Beim Start erscheint das Fenster und verschwindet nach 12 Sekunden in den Infobereich der Taskleiste " +
-         "(Maus darüber hält es offen). Ein Klick auf das Tassen-Symbol zeigt „Anzeigen“ und „Verbergen“. " +
-         "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ schließt WachHalter."),
+         "(Maus darüber hält es offen). Ein Klick auf das Tassen-Symbol öffnet das Fenster wieder. " +
+         "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ im Fenster schließt WachHalter."),
         ("Portabel & Datenschutz",
          "Keine Installation, keine Adminrechte, keine Internetverbindung. Die Einstellungen liegen in " +
          "„WachHalter.ini“ neben der EXE. Zum Entfernen „Mit Windows starten“ ausschalten und die EXE löschen."),

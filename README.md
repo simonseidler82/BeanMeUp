@@ -23,12 +23,12 @@ Erstellt von Simon Seidler · powered by Claude
 
 1. **`WachHalter.exe` starten.** Ein kleines Fenster erscheint unten rechts.
 2. Das Fenster blendet sich nach **12 Sekunden** in den Infobereich der Taskleiste aus. Solange die Maus darüber ist, pausiert der Countdown. Jeder Klick ins Fenster hält es offen.
-3. **Klick auf das Tassen-Symbol** im Infobereich zeigt **Anzeigen** und **Verbergen**.
+3. **Klick auf das Tassen-Symbol** im Infobereich (links oder rechts) öffnet das Fenster wieder.
 4. Im Fenster:
    - **„Wach halten aktivieren“** bzw. **„beenden“** – oder direkt eine Dauer wählen.
    - **Hell / Dunkel** und den **Modus** wählen.
    - **„Weitere Einstellungen …“** für Uhrzeiten, Standort und ob Apps und/oder Taskleiste umgestellt werden.
-   - **?** oder **F1** öffnet die Hilfe, **Esc** oder **✕** blendet aus, **Beenden** schließt WachHalter.
+   - **?** oder **F1** öffnet die Hilfe, **Esc** oder **✕** blendet aus, **Beenden** (im Fenster) schließt WachHalter.
 5. Mit der Maus über einem Element zeigt ein **Tooltip** kurz, was es tut.
 
 Das Tray-Symbol zeigt den Zustand: **mit orangem Dampf** = Wach halten aktiv, **blass ohne Dampf** = inaktiv.
@@ -66,8 +66,8 @@ Windows 10 oder 11. .NET Framework 4.8 ist dort bereits enthalten.
 
 | Datei | Inhalt |
 |---|---|
-| `Program.cs` | Einstieg, nur eine Instanz, Icon-Export |
-| `TrayApp.cs` | Tray-Symbol, Menü, Ablaufsteuerung |
+| `Program.cs` | Einstieg, nur eine Instanz (Hinweis beim zweiten Start), Icon-Export |
+| `TrayApp.cs` | Tray-Symbol, Ablaufsteuerung |
 | `MainWindow.cs` | Hauptfenster (im Code gezeichnet) |
 | `SettingsForm.cs` | „Weitere Einstellungen“ |
 | `HelpForm.cs` | „Hilfe & Info“ |
