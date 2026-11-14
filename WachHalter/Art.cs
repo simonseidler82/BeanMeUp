@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -61,7 +62,7 @@ sealed class Palette
     static Color Hex(int rgb) => Color.FromArgb(255, (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
 }
 
-/// <summary>Zeichenfunktionen: Tasse, Sonne, Mond, abgerundete Rechtecke, Tray-Icon.</summary>
+/// <summary>Zeichenfunktionen: App-Icon, Sonne, Mond, abgerundete Rechtecke, Tray- und .ico-Erzeugung.</summary>
 static class Art
 {
     [DllImport("user32.dll")]
@@ -82,33 +83,107 @@ static class Art
     public static Color Mix(Color a, Color b, float t) => Color.FromArgb(
         (int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
 
-    /// <summary>Kaffeetasse im 32er-Raster, auf <paramref name="r"/> skaliert. Dampf animiert über <paramref name="phase"/>.</summary>
-    public static void DrawCup(Graphics g, RectangleF r, Color color, bool steaming, float phase)
+    // ---------- App-Icon "Tasse Hell/Dunkel" (Variante C2) ----------
+
+    static readonly PointF[] CupBody = { new(4, 13), new(23, 13), new(20, 28), new(7, 28) };
+    static readonly Color TileTop = Color.FromArgb(0x33, 0x3D, 0x4D);
+    static readonly Color TileBottom = Color.FromArgb(0x14, 0x1A, 0x23);
+    static readonly Color CupShade = Color.FromArgb(0x55, 0x60, 0x70);
+    static readonly Color SteamColor = Color.FromArgb(0xF0, 0x8A, 0x24);
+
+    /// <summary>
+    /// Zeichnet das App-Icon: dunkle Kachel, Tasse links weiß / rechts grau (Hell/Dunkel),
+    /// oranger Dampf (= wach). Wird für Programm-Icon, Tray-Symbol und Fenster verwendet.
+    /// </summary>
+    public static void DrawAppIcon(Graphics g, RectangleF r, bool steaming = true)
     {
         var state = g.Save();
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.TranslateTransform(r.X, r.Y);
-        g.ScaleTransform(r.Width / 32f, r.Height / 32f);
+        float s = r.Width;
 
-        using var brush = new SolidBrush(color);
-        using var pen = new Pen(color, 3f);
-        using var saucer = new Pen(color, 1.6f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-        g.FillPolygon(brush, new PointF[] { new(4, 13), new(23, 13), new(20, 28), new(7, 28) });
-        g.DrawArc(pen, 18, 15, 10, 9, -90, 180);
-        g.DrawLine(saucer, 3, 30.2f, 24, 30.2f);
+        using (var tile = RoundRect(new RectangleF(0.5f, 0.5f, s - 1, s - 1), s * 0.22f))
+        using (var brush = new LinearGradientBrush(new RectangleF(0, 0, s, s), TileTop, TileBottom, 90f))
+            g.FillPath(brush, tile);
+
+        // Tasse im 32er-Raster, Rumpfmitte (x = 13,5) auf der Kachelmitte
+        float k = s * 0.7f / 32f;
+        g.TranslateTransform(s / 2 - 13.5f * k, s * 0.12f);
+        g.ScaleTransform(k, k);
+
+        var outer = g.Clip;
+        g.SetClip(new RectangleF(-20, -20, 33.5f, 80), CombineMode.Intersect);
+        CupShape(g, Color.White);
+        g.Clip = outer;
+        g.SetClip(new RectangleF(13.5f, -20, 60, 80), CombineMode.Intersect);
+        CupShape(g, CupShade);
+        g.Clip = outer;
+
+        using (var outline = new Pen(Color.White, 1.4f) { LineJoin = LineJoin.Round })
+            g.DrawPolygon(outline, CupBody);
+        using (var handle = new Pen(Color.White, 3f))
+            g.DrawArc(handle, 18, 15, 10, 9, -90, 180);
 
         if (steaming)
         {
-            for (int i = 0; i < 3; i++)
-            {
-                float x = 9 + i * 5;
-                float w = (float)Math.Sin(phase + i * 1.3) * 1.6f;
-                int alpha = Math.Max(60, Math.Min(255, (int)(170 + 85 * Math.Sin(phase * 0.8 + i))));
-                using var steam = new Pen(Color.FromArgb(alpha, color), 2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-                g.DrawBezier(steam, x, 11, x - 3 + w, 8, x + 3 - w, 5, x + w * 0.5f, 2);
-            }
+            using var steam = new Pen(SteamColor, 2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+            foreach (float x in new[] { 9f, 14f, 19f })
+                g.DrawBezier(steam, x, 10.5f, x - 2.6f, 7.8f, x + 2.6f, 5.2f, x, 2.5f);
         }
         g.Restore(state);
+    }
+
+    static void CupShape(Graphics g, Color c)
+    {
+        using var brush = new SolidBrush(c);
+        using var handle = new Pen(c, 3f);
+        using var saucer = new Pen(c, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
+        g.FillPolygon(brush, CupBody);
+        g.DrawArc(handle, 18, 15, 10, 9, -90, 180);
+        g.DrawLine(saucer, 3, 30.2f, 24, 30.2f);
+    }
+
+    static Icon? _windowIcon;
+    /// <summary>Icon für Fenster (Titelleiste, Alt+Tab).</summary>
+    public static Icon WindowIcon => _windowIcon ??= CreateTrayIcon(active: true);
+
+    /// <summary>
+    /// Speichert das App-Icon als .ico mit allen gängigen Größen (PNG-komprimiert).
+    /// Aufruf: WachHalter.exe --icon-export Pfad\WachHalter.ico
+    /// </summary>
+    public static void SaveIco(string path)
+    {
+        int[] sizes = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256];
+        var images = sizes.Select(size =>
+        {
+            using var bmp = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+            using (var g = Graphics.FromImage(bmp))
+                DrawAppIcon(g, new RectangleF(0, 0, size, size));
+            using var ms = new MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+            return ms.ToArray();
+        }).ToArray();
+
+        using var writer = new BinaryWriter(File.Create(path));
+        writer.Write((short)0);            // reserviert
+        writer.Write((short)1);            // Typ: Icon
+        writer.Write((short)sizes.Length); // Anzahl Bilder
+        int offset = 6 + 16 * sizes.Length;
+        for (int i = 0; i < sizes.Length; i++)
+        {
+            byte dim = (byte)(sizes[i] >= 256 ? 0 : sizes[i]);
+            writer.Write(dim);
+            writer.Write(dim);
+            writer.Write((byte)0);         // keine Palette
+            writer.Write((byte)0);
+            writer.Write((short)1);        // Farbebenen
+            writer.Write((short)32);       // Bit pro Pixel
+            writer.Write(images[i].Length);
+            writer.Write(offset);
+            offset += images[i].Length;
+        }
+        foreach (var image in images)
+            writer.Write(image);
     }
 
     public static void DrawSun(Graphics g, RectangleF r, Color fg, Color bg)
@@ -137,12 +212,26 @@ static class Art
         g.FillEllipse(cut, cx - radius * 0.35f, cy - radius * 1.25f, cr * 2, cr * 2);
     }
 
+    /// <summary>Tray-Symbol: aktiv = App-Icon mit Dampf; inaktiv = ohne Dampf und halb transparent.</summary>
     public static Icon CreateTrayIcon(bool active)
     {
-        using var bmp = new Bitmap(32, 32);
+        using var bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
         using (var g = Graphics.FromImage(bmp))
-            DrawCup(g, new RectangleF(0, 0, 32, 32),
-                active ? Palette.WindowsAccent() : Color.FromArgb(150, 150, 150), active, 0.6f);
+        {
+            if (active)
+            {
+                DrawAppIcon(g, new RectangleF(0, 0, 32, 32));
+            }
+            else
+            {
+                using var plain = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
+                using (var pg = Graphics.FromImage(plain))
+                    DrawAppIcon(pg, new RectangleF(0, 0, 32, 32), steaming: false);
+                using var faded = new ImageAttributes();
+                faded.SetColorMatrix(new ColorMatrix { Matrix33 = 0.55f });
+                g.DrawImage(plain, new Rectangle(0, 0, 32, 32), 0, 0, 32, 32, GraphicsUnit.Pixel, faded);
+            }
+        }
 
         IntPtr handle = bmp.GetHicon();
         try

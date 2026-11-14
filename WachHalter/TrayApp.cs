@@ -23,6 +23,7 @@ sealed class TrayApp : ApplicationContext
     readonly ToolStripMenuItem _miShow = new("Anzeigen");
     readonly ToolStripMenuItem _miHide = new("Verbergen");
     SettingsForm? _settingsForm;
+    HelpForm? _helpForm;
 
     public TrayApp()
     {
@@ -138,6 +139,19 @@ sealed class TrayApp : ApplicationContext
         form.Show();
     }
 
+    internal void ShowHelp()
+    {
+        if (_helpForm is { IsDisposed: false })
+        {
+            _helpForm.Activate();
+            return;
+        }
+        var form = new HelpForm();
+        form.FormClosed += (_, _) => _helpForm = null;
+        _helpForm = form;
+        form.Show();
+    }
+
     internal void Quit() => ExitThread();
 
     internal string ThemeStatus()
@@ -201,6 +215,7 @@ sealed class TrayApp : ApplicationContext
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         Awake.Stop();
         _settingsForm?.Close();
+        _helpForm?.Close();
         _window.AllowClose();
         _window.Close();
         _tray.Visible = false;

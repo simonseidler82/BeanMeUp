@@ -9,9 +9,19 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>WachHalter</AssemblyName>
+    <!-- Programm-Icon (Variante C2). Neu erzeugen: siehe README, Abschnitt "Programm-Icon neu erzeugen" -->
+    <ApplicationIcon>WachHalter.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <!-- Angaben in den Dateieigenschaften der EXE (Rechtsklick > Eigenschaften > Details) -->
+  <PropertyGroup>
     <Product>WachHalter</Product>
-    <Description>Hält den PC wach und schaltet Hell/Dunkel automatisch.</Description>
-    <Version>1.0.0</Version>
+    <Title>WachHalter</Title>
+    <Description>Hält den PC wach und schaltet Hell/Dunkel automatisch. Erstellt von Simon Seidler · powered by Claude</Description>
+    <Authors>Simon Seidler</Authors>
+    <Company>Simon Seidler</Company>
+    <Copyright>© 2026 Simon Seidler · powered by Claude</Copyright>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +32,11 @@
     <Using Include="System.Linq" />
     <Using Include="System.Threading" />
     <Using Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <!-- Dokumentation im Projektmappen-Explorer anzeigen -->
+  <ItemGroup>
+    <None Include="..\README.md" Link="README.md" />
   </ItemGroup>
 
 </Project>

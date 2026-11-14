@@ -21,6 +21,7 @@ sealed class SettingsForm : Form
     {
         _s = settings;
         Text = "WachHalter – Einstellungen";
+        Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
@@ -57,6 +58,13 @@ sealed class SettingsForm : Form
         Full(_display);
         Full(Header("System"));
         Full(_autostart);
+        Full(new Label
+        {
+            Text = MainWindow.Credits,
+            AutoSize = true,
+            ForeColor = SystemColors.GrayText,
+            Margin = new Padding(3, 14, 3, 0),
+        });
 
         var ok = new Button { Text = "OK", DialogResult = DialogResult.OK, AutoSize = true };
         var cancel = new Button { Text = "Abbrechen", DialogResult = DialogResult.Cancel, AutoSize = true };
@@ -91,8 +99,30 @@ sealed class SettingsForm : Form
         _offset.ValueChanged += (_, _) => UpdateSunInfo();
         FormClosing += (_, _) => { if (DialogResult == DialogResult.OK) Apply(); };
 
+        // Kleine Hilfe: Tooltips an allen Feldern
+        var tips = new ToolTip { AutoPopDelay = 15000, InitialDelay = 500 };
+        Components.Add(tips);
+        tips.SetToolTip(_mode, "Manuell: Design bleibt, wie gewählt.\nZeitplan: Wechsel zu festen Uhrzeiten.\nSonnenstand: Wechsel bei Sonnenauf- und -untergang.");
+        tips.SetToolTip(_target, "Was umgestellt wird: Fenster der Apps, Taskleiste/Startmenü oder beides.");
+        tips.SetToolTip(_lightFrom, "Ab dieser Uhrzeit wird auf Hell umgestellt (Modus „Zeitplan“).");
+        tips.SetToolTip(_darkFrom, "Ab dieser Uhrzeit wird auf Dunkel umgestellt (Modus „Zeitplan“).");
+        tips.SetToolTip(_lat, "Breitengrad deines Standorts, z. B. 52,52 für Berlin (Modus „Sonnenstand“).");
+        tips.SetToolTip(_lon, "Längengrad deines Standorts, z. B. 13,40 für Berlin (Modus „Sonnenstand“).");
+        tips.SetToolTip(_offset, "Verschiebt den Wechsel: positiv = später, negativ = früher als Sonnenauf-/untergang.");
+        tips.SetToolTip(_awakeOnStart, "Beim Start von WachHalter sofort „Wach halten“ aktivieren.");
+        tips.SetToolTip(_display, "Verhindert zusätzlich, dass sich der Bildschirm ausschaltet.");
+        tips.SetToolTip(_autostart, "Startet WachHalter bei deiner Windows-Anmeldung – ohne Installation.");
+
         UpdateEnabled();
         UpdateSunInfo();
+    }
+
+    readonly System.ComponentModel.Container Components = new();
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) Components.Dispose();
+        base.Dispose(disposing);
     }
 
     void UpdateEnabled()
