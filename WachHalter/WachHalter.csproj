@@ -9,7 +9,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>WachHalter</AssemblyName>
-    <!-- Programm-Icon (Variante C2). Neu erzeugen: siehe README, Abschnitt "Programm-Icon neu erzeugen" -->
+    <!-- Programm-Icon "Dämmerung". Neu erzeugen: siehe README, Abschnitt "Programm-Icon neu erzeugen" -->
     <ApplicationIcon>WachHalter.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -21,7 +21,7 @@
     <Authors>Simon Seidler</Authors>
     <Company>Simon Seidler</Company>
     <Copyright>© 2026 Simon Seidler · powered by Claude</Copyright>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

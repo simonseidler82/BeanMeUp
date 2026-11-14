@@ -31,7 +31,7 @@ Erstellt von Simon Seidler · powered by Claude
    - **?** oder **F1** öffnet die Hilfe, **Esc** oder **✕** blendet aus, **Beenden** (im Fenster) schließt WachHalter.
 5. Mit der Maus über einem Element zeigt ein **Tooltip** kurz, was es tut.
 
-Das Tray-Symbol zeigt den Zustand: **mit orangem Dampf** = Wach halten aktiv, **blass ohne Dampf** = inaktiv.
+Das Symbol ist eine lächelnde Kaffeetasse vor Sonne und Mond in der Abenddämmerung. Im Infobereich zeigt es den Zustand: **wache Augen** = Wach halten aktiv, **verschlafene Augen, blass** = inaktiv.
 
 ## Einstellungen & Datenschutz
 

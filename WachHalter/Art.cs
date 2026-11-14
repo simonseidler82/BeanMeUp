@@ -83,19 +83,26 @@ static class Art
     public static Color Mix(Color a, Color b, float t) => Color.FromArgb(
         (int)(a.R + (b.R - a.R) * t), (int)(a.G + (b.G - a.G) * t), (int)(a.B + (b.B - a.B) * t));
 
-    // ---------- App-Icon "Tasse Hell/Dunkel" (Variante C2) ----------
+    // ---------- App-Icon "Dämmerung" ----------
 
-    static readonly PointF[] CupBody = { new(4, 13), new(23, 13), new(20, 28), new(7, 28) };
-    static readonly Color TileTop = Color.FromArgb(0x33, 0x3D, 0x4D);
-    static readonly Color TileBottom = Color.FromArgb(0x14, 0x1A, 0x23);
-    static readonly Color CupShade = Color.FromArgb(0x55, 0x60, 0x70);
-    static readonly Color SteamColor = Color.FromArgb(0xF0, 0x8A, 0x24);
+    static Color Rgb(int rgb, int alpha = 255) =>
+        Color.FromArgb(alpha, (rgb >> 16) & 255, (rgb >> 8) & 255, rgb & 255);
+
+    static readonly Color DuskTop = Rgb(0xFFC27A);     // Abendrot
+    static readonly Color DuskBottom = Rgb(0x3C4A7A);  // Nachtblau
+    static readonly Color Ink = Rgb(0x2B2B33);
+    static readonly Color SunColor = Rgb(0xFFB627);
+    static readonly Color RayColor = Rgb(0xFFA620);
+    static readonly Color MoonColor = Rgb(0xF4ECCF);
+    static readonly Color CoffeeColor = Rgb(0x6B4430);
+    static readonly Color BlushColor = Rgb(0xFF8FA3, 170);
 
     /// <summary>
-    /// Zeichnet das App-Icon: dunkle Kachel, Tasse links weiß / rechts grau (Hell/Dunkel),
-    /// oranger Dampf (= wach). Wird für Programm-Icon, Tray-Symbol und Fenster verwendet.
+    /// Zeichnet das App-Icon "Dämmerung": Verlauf von Abendrot zu Nachtblau, Sonne und Mond,
+    /// davor eine lächelnde Kaffeetasse. <paramref name="awake"/> = offene Augen (Wach halten aktiv),
+    /// sonst verschlafene Augen. Wird für Programm-Icon, Tray-Symbol und Fenster verwendet.
     /// </summary>
-    public static void DrawAppIcon(Graphics g, RectangleF r, bool steaming = true)
+    public static void DrawAppIcon(Graphics g, RectangleF r, bool awake = true)
     {
         var state = g.Save();
         g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -103,44 +110,91 @@ static class Art
         float s = r.Width;
 
         using (var tile = RoundRect(new RectangleF(0.5f, 0.5f, s - 1, s - 1), s * 0.22f))
-        using (var brush = new LinearGradientBrush(new RectangleF(0, 0, s, s), TileTop, TileBottom, 90f))
-            g.FillPath(brush, tile);
+        using (var sky = new LinearGradientBrush(new RectangleF(0, 0, s, s), DuskTop, DuskBottom, 55f))
+            g.FillPath(sky, tile);
 
-        // Tasse im 32er-Raster, Rumpfmitte (x = 13,5) auf der Kachelmitte
-        float k = s * 0.7f / 32f;
-        g.TranslateTransform(s / 2 - 13.5f * k, s * 0.12f);
-        g.ScaleTransform(k, k);
+        // Ab hier im 100er-Raster
+        g.ScaleTransform(s / 100f, s / 100f);
 
-        var outer = g.Clip;
-        g.SetClip(new RectangleF(-20, -20, 33.5f, 80), CombineMode.Intersect);
-        CupShape(g, Color.White);
-        g.Clip = outer;
-        g.SetClip(new RectangleF(13.5f, -20, 60, 80), CombineMode.Intersect);
-        CupShape(g, CupShade);
-        g.Clip = outer;
+        // Sonne oben links
+        using (var rays = Round(new Pen(RayColor, 2.3f)))
+            for (int k = 0; k < 8; k++)
+            {
+                double a = k * Math.PI / 4;
+                g.DrawLine(rays,
+                    26 + (float)Math.Cos(a) * 8.7f, 22 + (float)Math.Sin(a) * 8.7f,
+                    26 + (float)Math.Cos(a) * 12f, 22 + (float)Math.Sin(a) * 12f);
+            }
+        Dot(g, SunColor, 26, 22, 6);
 
-        using (var outline = new Pen(Color.White, 1.4f) { LineJoin = LineJoin.Round })
-            g.DrawPolygon(outline, CupBody);
-        using (var handle = new Pen(Color.White, 3f))
-            g.DrawArc(handle, 18, 15, 10, 9, -90, 180);
+        // Mond oben rechts: der Ausschnitt wird mit dem Himmelsverlauf gemalt
+        Dot(g, MoonColor, 70, 24, 8);
+        using (var sky = new LinearGradientBrush(new RectangleF(0, 0, 100, 100), DuskTop, DuskBottom, 55f))
+            g.FillEllipse(sky, 70 - 8 * 0.35f, 24 - 8 * 1.35f, 8 * 1.9f, 8 * 1.9f);
+        Dot(g, MoonColor, 87.25f, 41.25f, 1.25f);
+        Dot(g, MoonColor, 83, 13, 1);
 
-        if (steaming)
+        // Tasse
+        using (var handle = new Pen(Ink, 5))
+            g.DrawArc(handle, 62, 50, 18, 20, -90, 180);
+        using (var cup = new GraphicsPath())
         {
-            using var steam = new Pen(SteamColor, 2f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-            foreach (float x in new[] { 9f, 14f, 19f })
-                g.DrawBezier(steam, x, 10.5f, x - 2.6f, 7.8f, x + 2.6f, 5.2f, x, 2.5f);
+            cup.AddLine(22, 42, 72, 42);
+            cup.AddLine(72, 42, 66, 80);
+            cup.AddArc(56, 72, 10, 10, 0, 90);
+            cup.AddLine(61, 82, 33, 82);
+            cup.AddArc(28, 72, 10, 10, 90, 90);
+            cup.CloseFigure();
+            using var white = new SolidBrush(Color.White);
+            using var outline = Round(new Pen(Ink, 2.6f));
+            g.FillPath(white, cup);
+            g.DrawPath(outline, cup);
         }
+        using (var coffee = new SolidBrush(CoffeeColor))
+            g.FillEllipse(coffee, 25, 39, 44, 7);
+
+        // Gesicht
+        if (awake)
+        {
+            Eye(g, 38, 58, 4.3f);
+            Eye(g, 56, 58, 4.3f);
+        }
+        else
+        {
+            using var lids = Round(new Pen(Ink, 2.8f));
+            g.DrawArc(lids, 33.5f, 54, 9, 7, 20, 140);
+            g.DrawArc(lids, 51.5f, 54, 9, 7, 20, 140);
+        }
+        using (var mouth = Round(new Pen(Ink, 3)))
+            g.DrawArc(mouth, 42.5f, 61.5f, 9, 7.2f, 25, 130);
+        using (var blush = new SolidBrush(BlushColor))
+        {
+            g.FillEllipse(blush, 27, 64.6f, 8, 4.8f);
+            g.FillEllipse(blush, 59, 64.6f, 8, 4.8f);
+        }
+
         g.Restore(state);
     }
 
-    static void CupShape(Graphics g, Color c)
+    static void Eye(Graphics g, float cx, float cy, float r)
+    {
+        Dot(g, Ink, cx, cy, r);
+        using var shine = new SolidBrush(Color.White);
+        g.FillEllipse(shine, cx - r * 0.55f, cy - r * 0.7f, r * 0.7f, r * 0.7f);
+    }
+
+    static void Dot(Graphics g, Color c, float cx, float cy, float r)
     {
         using var brush = new SolidBrush(c);
-        using var handle = new Pen(c, 3f);
-        using var saucer = new Pen(c, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round };
-        g.FillPolygon(brush, CupBody);
-        g.DrawArc(handle, 18, 15, 10, 9, -90, 180);
-        g.DrawLine(saucer, 3, 30.2f, 24, 30.2f);
+        g.FillEllipse(brush, cx - r, cy - r, 2 * r, 2 * r);
+    }
+
+    static Pen Round(Pen pen)
+    {
+        pen.StartCap = LineCap.Round;
+        pen.EndCap = LineCap.Round;
+        pen.LineJoin = LineJoin.Round;
+        return pen;
     }
 
     static Icon? _windowIcon;
@@ -212,7 +266,7 @@ static class Art
         g.FillEllipse(cut, cx - radius * 0.35f, cy - radius * 1.25f, cr * 2, cr * 2);
     }
 
-    /// <summary>Tray-Symbol: aktiv = App-Icon mit Dampf; inaktiv = ohne Dampf und halb transparent.</summary>
+    /// <summary>Tray-Symbol: aktiv = App-Icon mit wachen Augen; inaktiv = verschlafen und halb transparent.</summary>
     public static Icon CreateTrayIcon(bool active)
     {
         using var bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
@@ -226,7 +280,7 @@ static class Art
             {
                 using var plain = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
                 using (var pg = Graphics.FromImage(plain))
-                    DrawAppIcon(pg, new RectangleF(0, 0, 32, 32), steaming: false);
+                    DrawAppIcon(pg, new RectangleF(0, 0, 32, 32), awake: false);
                 using var faded = new ImageAttributes();
                 faded.SetColorMatrix(new ColorMatrix { Matrix33 = 0.55f });
                 g.DrawImage(plain, new Rectangle(0, 0, 32, 32), 0, 0, 32, 32, GraphicsUnit.Pixel, faded);

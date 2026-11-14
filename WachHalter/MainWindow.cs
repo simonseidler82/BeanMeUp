@@ -261,7 +261,7 @@ sealed class MainWindow : Form
         bool active = _app.Awake.Active;
 
         // Kopfzeile: App-Icon, Titel, Status
-        Art.DrawAppIcon(g, new RectangleF(S(M), S(15), S(32), S(32)), steaming: active);
+        Art.DrawAppIcon(g, new RectangleF(S(M), S(15), S(32), S(32)), awake: active);
         using (var textBrush = new SolidBrush(p.Text))
             g.DrawString("WachHalter", _titleFont, textBrush, S(56), S(12));
 
