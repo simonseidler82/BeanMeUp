@@ -8,20 +8,22 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>WachHalter</AssemblyName>
+    <AssemblyName>BeanMeUp</AssemblyName>
+    <RootNamespace>BeanMeUp</RootNamespace>
     <!-- Programm-Icon "Dämmerung". Neu erzeugen: siehe README, Abschnitt "Programm-Icon neu erzeugen" -->
-    <ApplicationIcon>WachHalter.ico</ApplicationIcon>
+    <ApplicationIcon>BeanMeUp.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!-- Angaben in den Dateieigenschaften der EXE (Rechtsklick > Eigenschaften > Details) -->
   <PropertyGroup>
-    <Product>WachHalter</Product>
-    <Title>WachHalter</Title>
-    <Description>Hält den PC wach und schaltet Hell/Dunkel automatisch. Erstellt von Simon Seidler · powered by Claude</Description>
+    <Product>Bean me up</Product>
+    <Title>Bean me up</Title>
+    <AssemblyTitle>Bean me up</AssemblyTitle>
+    <Description>Bean me up – hält deinen PC wach und schaltet Hell/Dunkel automatisch. Erstellt von Simon Seidler · powered by Claude</Description>
     <Authors>Simon Seidler</Authors>
     <Company>Simon Seidler</Company>
     <Copyright>© 2026 Simon Seidler · powered by Claude</Copyright>
-    <Version>1.2.1</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

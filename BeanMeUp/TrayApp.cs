@@ -1,12 +1,15 @@
 using Microsoft.Win32;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>
 /// Die App: Tray-Icon (ein Klick öffnet das Hauptfenster) plus Hauptfenster mit allen Einstellungen.
 /// </summary>
 sealed class TrayApp : ApplicationContext
 {
+    /// <summary>Anzeigename der App – überall in der Oberfläche verwendet.</summary>
+    internal const string AppName = "Bean me up";
+
     internal readonly AppSettings Settings = AppSettings.Load();
     internal readonly KeepAwake Awake = new();
     internal readonly ThemeController Theme;
@@ -25,6 +28,7 @@ sealed class TrayApp : ApplicationContext
     public TrayApp()
     {
         Theme = new ThemeController(Settings);
+        Autostart.MigrateLegacy();
         if (Settings.KeepAwakeOnStart)
             Awake.Start(null, Settings.KeepDisplayOn);
         Theme.Tick();
@@ -35,7 +39,7 @@ sealed class TrayApp : ApplicationContext
 
         // Kein Menü: Links- oder Rechtsklick auf das Tray-Symbol öffnet direkt das Fenster.
         // Beenden gibt es im Fenster selbst.
-        _tray = new NotifyIcon { Icon = _iconOff, Text = "WachHalter", Visible = true };
+        _tray = new NotifyIcon { Icon = _iconOff, Text = AppName, Visible = true };
         _tray.MouseUp += (_, _) => _window.ShowWindow(autoHide: false);
 
         _timer.Tick += (_, _) => OnTick();
@@ -183,14 +187,14 @@ sealed class TrayApp : ApplicationContext
         string awake = !Awake.Active ? "aus"
             : Awake.Until is { } until ? $"noch {Remaining(until)}"
             : "unbegrenzt";
-        string tip = $"WachHalter\nWach halten: {awake}\nDesign: {(dark ? "Dunkel" : "Hell")}";
+        string tip = $"{AppName}\nWach halten: {awake}\nDesign: {(dark ? "Dunkel" : "Hell")}";
         _tray.Text = tip.Length > 63 ? tip.Substring(0, 63) : tip; // .NET Framework: max. 63 Zeichen
 
         _window.RefreshState();
     }
 
     static void ShowError(string title, Exception ex) =>
-        MessageBox.Show(ex.Message, $"WachHalter – {title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        MessageBox.Show(ex.Message, $"{AppName} – {title}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
     protected override void ExitThreadCore()
     {

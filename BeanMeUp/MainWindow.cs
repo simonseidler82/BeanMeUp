@@ -3,7 +3,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>
 /// Hauptfenster im schlichten Windows-11-Stil: erscheint beim Start unten rechts und blendet sich
@@ -64,7 +64,7 @@ sealed class MainWindow : Form
         using (var g = Graphics.FromHwnd(IntPtr.Zero))
             _scale = g.DpiX / 96f;
 
-        Text = "WachHalter";
+        Text = TrayApp.AppName;
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
@@ -74,7 +74,7 @@ sealed class MainWindow : Form
         DoubleBuffered = true;
         ClientSize = new Size(S(W), S(530));
         Font = new Font("Segoe UI", S(12.5f), GraphicsUnit.Pixel);
-        _titleFont = new Font("Segoe UI Semibold", S(15), GraphicsUnit.Pixel);
+        _titleFont = new Font("Segoe UI Semibold", S(17), GraphicsUnit.Pixel);
         _sectionFont = new Font("Segoe UI Semibold", S(11), GraphicsUnit.Pixel);
         _smallFont = new Font("Segoe UI", S(11.5f), GraphicsUnit.Pixel);
         _helpFont = new Font("Segoe UI Semibold", S(14), GraphicsUnit.Pixel);
@@ -121,11 +121,11 @@ sealed class MainWindow : Form
 
         // --- Allgemein ---
         _autostartSwitch = Add(new ToggleSwitch { Text = "Mit Windows starten" }, M, 414, Content, 26,
-            () => _app.ToggleAutostart(), "Startet WachHalter bei deiner Windows-Anmeldung – ohne Installation.");
+            () => _app.ToggleAutostart(), $"Startet {TrayApp.AppName} bei deiner Windows-Anmeldung – ohne Installation.");
         Add(new Pill { Text = "Weitere Einstellungen …" }, M, 450, Content - 104, 30,
             () => _app.ShowSettings(), "Uhrzeiten, Standort und ob Apps und/oder Taskleiste umgestellt werden.");
         Add(new Pill { Text = "Beenden", Danger = true }, W - M - 100, 450, 100, 30,
-            () => _app.Quit(), "WachHalter schließen. Danach gilt wieder das normale Energieverhalten.");
+            () => _app.Quit(), $"{TrayApp.AppName} schließen. Danach gilt wieder das normale Energieverhalten.");
 
         _anim.Tick += (_, _) => Animate();
         RefreshState();
@@ -261,14 +261,14 @@ sealed class MainWindow : Form
         bool active = _app.Awake.Active;
 
         // Kopfzeile: App-Icon, Titel, Status
-        Art.DrawAppIcon(g, new RectangleF(S(M), S(15), S(32), S(32)), awake: active);
+        Art.DrawAppIcon(g, new RectangleF(S(M), S(12), S(38), S(38)), awake: active);
         using (var textBrush = new SolidBrush(p.Text))
-            g.DrawString("WachHalter", _titleFont, textBrush, S(56), S(12));
+            g.DrawString(TrayApp.AppName, _titleFont, textBrush, S(62), S(8));
 
         using (var dot = new SolidBrush(active ? Color.FromArgb(16, 160, 80) : p.Sub))
-            g.FillEllipse(dot, S(58), S(39), S(7), S(7));
+            g.FillEllipse(dot, S(64), S(39), S(7), S(7));
         using (var subBrush = new SolidBrush(p.Sub))
-            g.DrawString(AwakeStatus(), _smallFont, subBrush, S(68), S(34));
+            g.DrawString(AwakeStatus(), _smallFont, subBrush, S(74), S(34));
 
         // Hilfe (?) und Schließen (✕ – blendet nur ins Tray aus)
         DrawHeaderButtonBackground(g, _helpRect, _helpHover);

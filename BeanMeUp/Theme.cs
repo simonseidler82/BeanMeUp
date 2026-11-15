@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Liest/setzt das Windows-Design (Hell/Dunkel) für den aktuellen Benutzer.</summary>
 static class ThemeRegistry

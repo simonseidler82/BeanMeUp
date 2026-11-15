@@ -1,4 +1,4 @@
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Sonnenauf- und -untergang offline berechnet (Almanac-for-Computers-Algorithmus, ca. ±2 Min).</summary>
 static class SunCalc

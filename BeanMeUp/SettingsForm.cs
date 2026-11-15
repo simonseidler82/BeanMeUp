@@ -1,4 +1,4 @@
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Kleines Einstellungsfenster (komplett im Code aufgebaut, kein Designer nötig).</summary>
 [System.ComponentModel.DesignerCategory("Code")]
@@ -20,7 +20,7 @@ sealed class SettingsForm : Form
     public SettingsForm(AppSettings settings)
     {
         _s = settings;
-        Text = "WachHalter – Einstellungen";
+        Text = $"{TrayApp.AppName} – Einstellungen";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -109,9 +109,9 @@ sealed class SettingsForm : Form
         tips.SetToolTip(_lat, "Breitengrad deines Standorts, z. B. 52,52 für Berlin (Modus „Sonnenstand“).");
         tips.SetToolTip(_lon, "Längengrad deines Standorts, z. B. 13,40 für Berlin (Modus „Sonnenstand“).");
         tips.SetToolTip(_offset, "Verschiebt den Wechsel: positiv = später, negativ = früher als Sonnenauf-/untergang.");
-        tips.SetToolTip(_awakeOnStart, "Beim Start von WachHalter sofort „Wach halten“ aktivieren.");
+        tips.SetToolTip(_awakeOnStart, $"Beim Start von {TrayApp.AppName} sofort „Wach halten“ aktivieren.");
         tips.SetToolTip(_display, "Verhindert zusätzlich, dass sich der Bildschirm ausschaltet.");
-        tips.SetToolTip(_autostart, "Startet WachHalter bei deiner Windows-Anmeldung – ohne Installation.");
+        tips.SetToolTip(_autostart, $"Startet {TrayApp.AppName} bei deiner Windows-Anmeldung – ohne Installation.");
 
         UpdateEnabled();
         UpdateSunInfo();
@@ -157,7 +157,7 @@ sealed class SettingsForm : Form
         try { Autostart.Set(_autostart.Checked); }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "WachHalter – Autostart", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(ex.Message, $"{TrayApp.AppName} – Autostart", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 

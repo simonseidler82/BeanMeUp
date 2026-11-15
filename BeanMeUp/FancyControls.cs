@@ -1,7 +1,7 @@
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Gemeinsame Basis: selbst gezeichnet, flimmerfrei, jeder Klick zählt (kein Doppelklick-Schlucken).</summary>
 [System.ComponentModel.DesignerCategory("Code")]

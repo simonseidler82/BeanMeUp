@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Verhindert Standby (und optional das Abschalten des Bildschirms).</summary>
 sealed class KeepAwake

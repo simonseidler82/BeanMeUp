@@ -3,7 +3,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>
 /// Zurückhaltende Farben im Windows-11-Stil. Hell/Dunkel folgt Windows,
@@ -203,7 +203,7 @@ static class Art
 
     /// <summary>
     /// Speichert das App-Icon als .ico mit allen gängigen Größen (PNG-komprimiert).
-    /// Aufruf: WachHalter.exe --icon-export Pfad\WachHalter.ico
+    /// Aufruf: BeanMeUp.exe --icon-export Pfad\BeanMeUp.ico
     /// </summary>
     public static void SaveIco(string path)
     {

@@ -1,7 +1,7 @@
 using System.Drawing.Text;
 using System.Runtime.InteropServices;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>Fenster "Hilfe &amp; Info": kurze Bedienungsanleitung, Version und Credits.</summary>
 [System.ComponentModel.DesignerCategory("Code")]
@@ -15,22 +15,23 @@ sealed class HelpForm : Form
         ("Wach halten",
          "Verhindert, dass Windows in den Energiesparmodus geht – ohne Zeitlimit (∞) oder für 30 Minuten " +
          "bis 4 Stunden. Mit „Bildschirm eingeschaltet lassen“ bleibt auch der Monitor an. " +
-         "Sobald WachHalter beendet wird, gilt wieder das normale Energieverhalten."),
+         "Sobald Bean me up beendet wird, gilt wieder das normale Energieverhalten."),
         ("Aktivität simulieren",
          "Bewegt die Maus nach 25 Sekunden ohne Eingabe unsichtbar um 1 Pixel hin und zurück. Das verhindert " +
          "zusätzlich Bildschirmschoner, automatische Sperre und den Status „Abwesend“ (z. B. in Teams). " +
          "Standardmäßig aus – bitte die Richtlinien deines Arbeitgebers beachten."),
         ("Hell / Dunkel",
          "„Hell“ und „Dunkel“ stellen Windows sofort um. In den Modi „Zeitplan“ und „Sonnenstand“ wechselt " +
-         "WachHalter automatisch; eine eigene Wahl gilt dann bis zum nächsten geplanten Wechsel. Uhrzeiten, " +
+         "Bean me up automatisch; eine eigene Wahl gilt dann bis zum nächsten geplanten Wechsel. Uhrzeiten, " +
          "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“."),
         ("Fenster & Infobereich",
          "Beim Start erscheint das Fenster und verschwindet nach 12 Sekunden in den Infobereich der Taskleiste " +
          "(Maus darüber hält es offen). Ein Klick auf das Tassen-Symbol öffnet das Fenster wieder. " +
-         "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ im Fenster schließt WachHalter."),
+         "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ im Fenster schließt Bean me up."),
         ("Portabel & Datenschutz",
          "Keine Installation, keine Adminrechte, keine Internetverbindung. Die Einstellungen liegen in " +
-         "„WachHalter.ini“ neben der EXE. Zum Entfernen „Mit Windows starten“ ausschalten und die EXE löschen."),
+         "„BeanMeUp.ini“ neben der EXE. Zum Entfernen „Mit Windows starten“ ausschalten und die EXE löschen. " +
+         "Einstellungen der Vorgängerversion „WachHalter“ werden automatisch übernommen."),
     ];
 
     readonly float _scale;
@@ -46,7 +47,7 @@ sealed class HelpForm : Form
         var p = Palette.Current;
         string version = typeof(HelpForm).Assembly.GetName().Version?.ToString(3) ?? "";
 
-        Text = "WachHalter – Hilfe & Info";
+        Text = $"{TrayApp.AppName} – Hilfe & Info";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -59,7 +60,7 @@ sealed class HelpForm : Form
         ForeColor = p.Text;
         KeyPreview = true;
         Font = new Font("Segoe UI", S(12.5f), GraphicsUnit.Pixel);
-        _titleFont = new Font("Segoe UI Semibold", S(18), GraphicsUnit.Pixel);
+        _titleFont = new Font("Segoe UI Semibold", S(20), GraphicsUnit.Pixel);
         _sectionFont = new Font("Segoe UI Semibold", S(13), GraphicsUnit.Pixel);
         _smallFont = new Font("Segoe UI", S(11.5f), GraphicsUnit.Pixel);
 
@@ -74,15 +75,15 @@ sealed class HelpForm : Form
         };
 
         // Kopf: Icon, Name, Version
-        var header = new Panel { Size = new Size(width, S(56)), Margin = new Padding(0, 0, 0, S(4)) };
+        var header = new Panel { Size = new Size(width, S(64)), Margin = new Padding(0, 0, 0, S(4)) };
         header.Paint += (_, e) =>
         {
             e.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-            Art.DrawAppIcon(e.Graphics, new RectangleF(0, S(4), S(48), S(48)));
+            Art.DrawAppIcon(e.Graphics, new RectangleF(0, S(4), S(56), S(56)));
             using var textBrush = new SolidBrush(p.Text);
             using var subBrush = new SolidBrush(p.Sub);
-            e.Graphics.DrawString("WachHalter", _titleFont, textBrush, S(60), S(6));
-            e.Graphics.DrawString($"Version {version} · Wach halten und Hell/Dunkel für Windows", _smallFont, subBrush, S(62), S(32));
+            e.Graphics.DrawString(TrayApp.AppName, _titleFont, textBrush, S(68), S(6));
+            e.Graphics.DrawString($"Version {version} · hält deinen PC wach · Hell/Dunkel für Windows", _smallFont, subBrush, S(70), S(36));
         };
         flow.Controls.Add(header);
 

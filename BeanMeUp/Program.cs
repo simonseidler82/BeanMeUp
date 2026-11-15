@@ -1,9 +1,10 @@
 using System.Runtime.InteropServices;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 /// <summary>
-/// WachHalter – hält den PC wach und schaltet Windows automatisch zwischen Hell und Dunkel.
+/// Bean me up – hält den PC wach und schaltet Windows automatisch zwischen Hell und Dunkel.
+/// (Vorgängername: WachHalter)
 /// Erstellt von Simon Seidler · powered by Claude.
 /// </summary>
 static class Program
@@ -27,13 +28,13 @@ static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        using var mutex = new Mutex(true, @"Local\WachHalter_SingleInstance", out bool isFirst);
+        using var mutex = new Mutex(true, @"Local\BeanMeUp_SingleInstance", out bool isFirst);
         if (!isFirst)
         {
             MessageBox.Show(
-                "WachHalter läuft bereits.\n\n" +
+                $"{TrayApp.AppName} läuft bereits.\n\n" +
                 "Klicke auf das Tassen-Symbol im Infobereich der Taskleiste, um das Fenster zu öffnen.",
-                "WachHalter", MessageBoxButtons.OK, MessageBoxIcon.None);
+                TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
             return;
         }
 

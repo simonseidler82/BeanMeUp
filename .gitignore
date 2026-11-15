@@ -186,7 +186,7 @@ publish/
 # but database connection strings (with potential passwords) will be unencrypted
 *.pubxml
 # Ausnahme: Das Portable-Profil enthält keine Zugangsdaten und wird zum Bauen der EXE gebraucht
-!WachHalter/Properties/PublishProfiles/Portable.pubxml
+!BeanMeUp/Properties/PublishProfiles/Portable.pubxml
 *.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to

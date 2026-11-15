@@ -3,14 +3,15 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Win32;
 
-namespace WachHalter;
+namespace BeanMeUp;
 
 public enum ThemeMode { Manuell, Zeitplan, Sonnenstand }
 public enum ThemeTarget { AppsUndSystem, NurApps, NurSystem }
 
 /// <summary>
 /// Einstellungen. Werden portabel neben der EXE gespeichert
-/// (Fallback: %AppData%\WachHalter, falls der Ordner schreibgeschützt ist).
+/// (Fallback: %AppData%\BeanMeUp, falls der Ordner schreibgeschützt ist).
+/// Einstellungen der Vorgängerversion "WachHalter" werden beim ersten Start übernommen.
 /// </summary>
 public sealed class AppSettings
 {
@@ -34,10 +35,15 @@ public sealed class AppSettings
     public bool? OverrideDark { get; set; }
     public DateTime? OverrideUntil { get; set; }
 
-    const string FileName = "WachHalter.ini";
+    const string FileName = "BeanMeUp.ini";
     static readonly string PortablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, FileName);
     static readonly string AppDataPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "WachHalter", FileName);
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BeanMeUp", FileName);
+
+    // Vorgängerversion "WachHalter": wird nur gelesen, falls noch keine BeanMeUp.ini existiert
+    static readonly string LegacyPortablePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "WachHalter.ini");
+    static readonly string LegacyAppDataPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "WachHalter", "WachHalter.ini");
 
     static readonly CultureInfo Inv = CultureInfo.InvariantCulture;
     static readonly PropertyInfo[] Props = typeof(AppSettings)
@@ -48,7 +54,7 @@ public sealed class AppSettings
     // Einfaches "Name=Wert"-Format – kommt ohne JSON-Bibliothek aus.
     public static AppSettings Load()
     {
-        foreach (var path in new[] { PortablePath, AppDataPath })
+        foreach (var path in new[] { PortablePath, AppDataPath, LegacyPortablePath, LegacyAppDataPath })
         {
             if (!File.Exists(path)) continue;
             var s = new AppSettings();
@@ -121,8 +127,25 @@ public sealed class AppSettings
 static class Autostart
 {
     const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    const string Name = "WachHalter";
+    const string Name = "BeanMeUp";
+    const string LegacyName = "WachHalter"; // Eintrag der Vorgängerversion
     static string Command => $"\"{Application.ExecutablePath}\"";
+
+    /// <summary>
+    /// War "Mit Windows starten" in der Vorgängerversion WachHalter aktiv, wird der alte Eintrag
+    /// entfernt und durch einen für Bean me up ersetzt.
+    /// </summary>
+    public static void MigrateLegacy()
+    {
+        try
+        {
+            using var key = Registry.CurrentUser.CreateSubKey(RunKey);
+            if (key.GetValue(LegacyName) == null) return;
+            key.DeleteValue(LegacyName, throwOnMissingValue: false);
+            key.SetValue(Name, Command);
+        }
+        catch { /* Autostart bleibt dann unverändert */ }
+    }
 
     public static bool IsEnabled
     {
