@@ -38,9 +38,9 @@ sealed class TrayApp : ApplicationContext
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
 
         // Kein Menü: Links- oder Rechtsklick auf das Tray-Symbol öffnet direkt das Fenster.
-        // Beenden gibt es im Fenster selbst.
+        // Es blendet sich wie beim Start nach 12 s wieder aus. Beenden gibt es im Fenster selbst.
         _tray = new NotifyIcon { Icon = _iconOff, Text = AppName, Visible = true };
-        _tray.MouseUp += (_, _) => _window.ShowWindow(autoHide: false);
+        _tray.MouseUp += (_, _) => _window.ShowWindow(autoHide: true);
 
         _timer.Tick += (_, _) => OnTick();
         _timer.Start();

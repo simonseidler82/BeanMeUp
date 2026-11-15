@@ -25,7 +25,7 @@ Erstellt von Simon Seidler · powered by Claude
 
 1. **`BeanMeUp.exe` starten.** Ein kleines Fenster erscheint unten rechts.
 2. Das Fenster blendet sich nach **12 Sekunden** in den Infobereich der Taskleiste aus. Solange die Maus darüber ist, pausiert der Countdown. Jeder Klick ins Fenster hält es offen.
-3. **Klick auf das Tassen-Symbol** im Infobereich (links oder rechts) öffnet das Fenster wieder.
+3. **Klick auf das Tassen-Symbol** im Infobereich (links oder rechts) öffnet das Fenster wieder – auch dann blendet es sich nach 12 Sekunden automatisch aus.
 4. Im Fenster:
    - **„Wach halten aktivieren“** bzw. **„beenden“** – oder direkt eine Dauer wählen.
    - **Hell / Dunkel** und den **Modus** wählen.

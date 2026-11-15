@@ -25,8 +25,8 @@ sealed class HelpForm : Form
          "Bean me up automatisch; eine eigene Wahl gilt dann bis zum nächsten geplanten Wechsel. Uhrzeiten, " +
          "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“."),
         ("Fenster & Infobereich",
-         "Beim Start erscheint das Fenster und verschwindet nach 12 Sekunden in den Infobereich der Taskleiste " +
-         "(Maus darüber hält es offen). Ein Klick auf das Tassen-Symbol öffnet das Fenster wieder. " +
+         "Das Fenster erscheint beim Start und nach jedem Klick auf das Tassen-Symbol im Infobereich und " +
+         "verschwindet nach 12 Sekunden wieder dorthin (Maus darüber pausiert, ein Klick ins Fenster hält es offen). " +
          "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ im Fenster schließt Bean me up."),
         ("Portabel & Datenschutz",
          "Keine Installation, keine Adminrechte, keine Internetverbindung. Die Einstellungen liegen in " +

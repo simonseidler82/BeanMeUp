@@ -52,7 +52,8 @@ sealed class MainWindow : Form
     readonly Font _titleFont, _sectionFont, _smallFont, _helpFont;
     readonly Rectangle _header, _closeRect, _helpRect;
 
-    bool _closeHover, _helpHover, _autoHide, _fadingOut, _allowClose;
+    bool _closeHover, _helpHover, _autoHide, _fadingOut, _allowClose, _mouseMovedSinceShow;
+    Point _cursorAtShow;
     double _autoHideLeft, _lastTick;
     string _themeStatus = "";
 
@@ -152,6 +153,10 @@ sealed class MainWindow : Form
         _fadingOut = false;
         _autoHide = autoHide;
         _autoHideLeft = AutoHideSeconds;
+        // Merken, wo die Maus beim Öffnen steht: Liegt das Fenster zufällig darunter (z. B. Klick im
+        // ausgeklappten Infobereich), soll das den Countdown nicht anhalten.
+        _cursorAtShow = Cursor.Position;
+        _mouseMovedSinceShow = false;
 
         RefreshState();
         if (wasHidden)
@@ -180,6 +185,14 @@ sealed class MainWindow : Form
     }
 
     public void AllowClose() => _allowClose = true;
+
+    /// <summary>Countdown pausiert nur, wenn die Maus seit dem Öffnen bewegt wurde und über dem Fenster ist.</summary>
+    bool PausedByMouse()
+    {
+        var pos = Cursor.Position;
+        if (!_mouseMovedSinceShow && pos != _cursorAtShow) _mouseMovedSinceShow = true;
+        return _mouseMovedSinceShow && Bounds.Contains(pos);
+    }
 
     void StopAutoHide()
     {
@@ -238,7 +251,7 @@ sealed class MainWindow : Form
 
         if (_autoHide)
         {
-            if (!Bounds.Contains(Cursor.Position)) _autoHideLeft -= dt;
+            if (!PausedByMouse()) _autoHideLeft -= dt;
             Invalidate(new Rectangle(0, S(492), ClientSize.Width, S(38)));
             if (_autoHideLeft <= 0) HideWindow();
         }
@@ -305,7 +318,7 @@ sealed class MainWindow : Form
             using (var fill = new SolidBrush(p.Accent))
                 g.FillRectangle(fill, bar.X, bar.Y, bar.Width * (float)Math.Max(0, _autoHideLeft / AutoHideSeconds), bar.Height);
 
-            string hint = Bounds.Contains(Cursor.Position)
+            string hint = _mouseMovedSinceShow && Bounds.Contains(Cursor.Position)
                 ? "Ausblenden pausiert"
                 : $"Wird in {Math.Ceiling(Math.Max(0, _autoHideLeft))} s in den Infobereich verschoben";
             g.DrawString(hint, _smallFont, secBrush, S(M - 1), S(502));
