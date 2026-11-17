@@ -6,6 +6,12 @@ Erstellt von Simon Seidler · powered by Claude
 
 > Früherer Name: *WachHalter*. Einstellungen und Autostart der Vorgängerversion werden beim ersten Start automatisch übernommen.
 
+## Download
+
+**[➜ Neueste Version herunterladen](https://github.com/simonseidler82/BeanMeUp/releases/latest)** – dort unter *Assets* auf **`BeanMeUp.exe`** klicken, Datei speichern und starten. Fertig.
+
+> **Hinweis zur Windows-Warnung:** Die EXE ist nicht digital signiert. Beim ersten Start zeigt Windows deshalb möglicherweise *„Der Computer wurde durch Windows geschützt“*. Klicke dann auf **Weitere Informationen › Trotzdem ausführen**. Der vollständige Quellcode liegt offen in diesem Repository.
+
 ---
 
 ## Funktionen
@@ -41,6 +47,10 @@ Das Symbol ist eine lächelnde Kaffeetasse vor Sonne und Mond in der Abenddämme
 - Gibt es noch keine `BeanMeUp.ini`, liest Bean me up einmalig die `WachHalter.ini` der Vorgängerversion.
 - Bean me up ändert in der Registry nur das Windows-Design (`AppsUseLightTheme`, `SystemUsesLightTheme`) und – falls gewünscht – den Autostart-Eintrag `BeanMeUp` unter `HKCU\...\Run` (ein alter Eintrag `WachHalter` wird dabei ersetzt).
 - **Entfernen:** „Mit Windows starten“ ausschalten, Bean me up beenden, EXE und `.ini` löschen.
+
+## Datenschutz
+
+Bean me up sammelt keine Daten, sendet nichts ins Internet und braucht keine Internetverbindung. Alles läuft lokal auf deinem PC; die einzigen gespeicherten Daten sind deine Einstellungen in der `.ini`-Datei.
 
 ## Hinweis zu „Aktivität simulieren“
 
@@ -92,5 +102,9 @@ BeanMeUp\bin\Release\net48\BeanMeUp.exe --icon-export BeanMeUp\BeanMeUp.ico
 ```
 
 ---
+
+## Lizenz
+
+Bean me up steht unter der **[MIT-Lizenz](LICENSE)**: Jeder darf das Programm und den Quellcode kostenlos nutzen, verändern und weitergeben – auch kommerziell –, solange der Copyright-Hinweis erhalten bleibt. Die Nutzung erfolgt ohne Gewähr.
 
 © 2026 Simon Seidler · powered by Claude
