@@ -118,7 +118,7 @@ sealed class ToggleSwitch : FancyControl
         float h = Height * 0.76f, w = h * 2f;
         var track = new RectangleF(Width - w - 1.5f, (Height - h) / 2, w, h);
 
-        using (var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap })
+        using (var sf = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap, Trimming = StringTrimming.EllipsisCharacter })
         using (var textBrush = new SolidBrush(p.Text))
             g.DrawString(Text, Font, textBrush, new RectangleF(0, 0, track.X - 8, Height), sf);
 

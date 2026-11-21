@@ -5,26 +5,30 @@ namespace BeanMeUp;
 sealed class SettingsForm : Form
 {
     readonly AppSettings _s;
-    readonly ComboBox _mode = Combo("Manuell", "Automatisch: Zeitplan", "Automatisch: Sonnenstand");
-    readonly ComboBox _target = Combo("Apps und System", "Nur Apps", "Nur System (Taskleiste, Start)");
+    readonly ComboBox _mode = Combo(L.T("mode.manual"), L.T("set.modeSchedule"), L.T("set.modeSun"));
+    readonly ComboBox _target = Combo(L.T("set.targetBoth"), L.T("set.targetApps"), L.T("set.targetSystem"));
+    readonly ComboBox _language = Combo();
     readonly DateTimePicker _lightFrom = TimePicker();
     readonly DateTimePicker _darkFrom = TimePicker();
     readonly NumericUpDown _lat = Num(-90, 90, 4);
     readonly NumericUpDown _lon = Num(-180, 180, 4);
     readonly NumericUpDown _offset = Num(-180, 180, 0);
     readonly Label _sunInfo = new() { AutoSize = true, Margin = new Padding(3, 3, 3, 6) };
-    readonly CheckBox _awakeOnStart = Check("Beim Start der App sofort wach halten");
-    readonly CheckBox _display = Check("Bildschirm anlassen");
-    readonly CheckBox _autostart = Check("Mit Windows starten");
+    readonly CheckBox _awakeOnStart = Check(L.T("set.awakeOnStart"));
+    readonly CheckBox _display = Check(L.T("set.display"));
+    readonly CheckBox _autostart = Check(L.T("autostart"));
 
     /// <summary>Grund, warum Hell/Dunkel gesperrt ist (z. B. Firmenrichtlinie) – null, wenn erlaubt.</summary>
     readonly string? _themeLock;
+
+    /// <summary>Sprachcodes passend zu den Einträgen in _language ("auto" zuerst).</summary>
+    readonly List<string> _languageCodes = ["auto"];
 
     public SettingsForm(AppSettings settings, string? themeLock = null)
     {
         _s = settings;
         _themeLock = themeLock;
-        Text = $"{TrayApp.AppName} – Einstellungen";
+        Text = $"{TrayApp.AppName} – {L.T("set.title")}";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -48,30 +52,31 @@ sealed class SettingsForm : Form
             grid.SetColumnSpan(c, 2);
         }
 
-        Full(Header("Hell / Dunkel"));
-        Row("Modus:", _mode);
-        Row("Gilt für:", _target);
-        Row("Hell ab:", _lightFrom);
-        Row("Dunkel ab:", _darkFrom);
-        Row("Breitengrad:", _lat);
-        Row("Längengrad:", _lon);
-        Row("Versatz (Min.):", _offset);
+        Full(Header(L.T("set.secTheme")));
+        Row(L.T("set.mode"), _mode);
+        Row(L.T("set.target"), _target);
+        Row(L.T("set.lightFrom"), _lightFrom);
+        Row(L.T("set.darkFrom"), _darkFrom);
+        Row(L.T("set.lat"), _lat);
+        Row(L.T("set.lon"), _lon);
+        Row(L.T("set.offset"), _offset);
         Full(_sunInfo);
-        Full(Header("Wach halten"));
+        Full(Header(L.T("sec.awake")));
         Full(_awakeOnStart);
         Full(_display);
-        Full(Header("System"));
+        Full(Header(L.T("set.secSystem")));
         Full(_autostart);
+        Row(L.T("set.language"), _language);
         Full(new Label
         {
-            Text = MainWindow.Credits,
+            Text = L.Credits,
             AutoSize = true,
             ForeColor = SystemColors.GrayText,
             Margin = new Padding(3, 14, 3, 0),
         });
 
-        var ok = new Button { Text = "OK", DialogResult = DialogResult.OK, AutoSize = true };
-        var cancel = new Button { Text = "Abbrechen", DialogResult = DialogResult.Cancel, AutoSize = true };
+        var ok = new Button { Text = L.T("set.ok"), DialogResult = DialogResult.OK, AutoSize = true };
+        var cancel = new Button { Text = L.T("set.cancel"), DialogResult = DialogResult.Cancel, AutoSize = true };
         var buttons = new FlowLayoutPanel
         {
             FlowDirection = FlowDirection.RightToLeft,
@@ -85,6 +90,16 @@ sealed class SettingsForm : Form
         Controls.Add(grid);
         AcceptButton = ok;
         CancelButton = cancel;
+
+        // Sprachauswahl: "Automatisch (Systemsprache)" + alle übersetzten Sprachen in ihrer eigenen Schreibweise
+        _language.Items.Add(L.T("set.langAuto"));
+        foreach (var (code, name) in L.Languages)
+        {
+            _languageCodes.Add(code);
+            _language.Items.Add(name);
+        }
+        int langIndex = _languageCodes.IndexOf((_s.Language ?? "auto").Trim().ToLowerInvariant());
+        _language.SelectedIndex = langIndex < 0 ? 0 : langIndex;
 
         _mode.SelectedIndex = (int)_s.ThemeMode;
         _target.SelectedIndex = (int)_s.ThemeTarget;
@@ -106,16 +121,17 @@ sealed class SettingsForm : Form
         // Kleine Hilfe: Tooltips an allen Feldern
         var tips = new ToolTip { AutoPopDelay = 15000, InitialDelay = 500 };
         Components.Add(tips);
-        tips.SetToolTip(_mode, "Manuell: Design bleibt, wie gewählt.\nZeitplan: Wechsel zu festen Uhrzeiten.\nSonnenstand: Wechsel bei Sonnenauf- und -untergang.");
-        tips.SetToolTip(_target, "Was umgestellt wird: Fenster der Apps, Taskleiste/Startmenü oder beides.");
-        tips.SetToolTip(_lightFrom, "Ab dieser Uhrzeit wird auf Hell umgestellt (Modus „Zeitplan“).");
-        tips.SetToolTip(_darkFrom, "Ab dieser Uhrzeit wird auf Dunkel umgestellt (Modus „Zeitplan“).");
-        tips.SetToolTip(_lat, "Breitengrad deines Standorts, z. B. 52,52 für Berlin (Modus „Sonnenstand“).");
-        tips.SetToolTip(_lon, "Längengrad deines Standorts, z. B. 13,40 für Berlin (Modus „Sonnenstand“).");
-        tips.SetToolTip(_offset, "Verschiebt den Wechsel: positiv = später, negativ = früher als Sonnenauf-/untergang.");
-        tips.SetToolTip(_awakeOnStart, $"Beim Start von {TrayApp.AppName} sofort „Wach halten“ aktivieren.");
-        tips.SetToolTip(_display, "Verhindert zusätzlich, dass sich der Bildschirm ausschaltet.");
-        tips.SetToolTip(_autostart, $"Startet {TrayApp.AppName} bei deiner Windows-Anmeldung – ohne Installation.");
+        tips.SetToolTip(_mode, L.T("set.tipMode"));
+        tips.SetToolTip(_target, L.T("set.tipTarget"));
+        tips.SetToolTip(_lightFrom, L.T("set.tipLight"));
+        tips.SetToolTip(_darkFrom, L.T("set.tipDark"));
+        tips.SetToolTip(_lat, L.T("set.tipLat"));
+        tips.SetToolTip(_lon, L.T("set.tipLon"));
+        tips.SetToolTip(_offset, L.T("set.tipOffset"));
+        tips.SetToolTip(_awakeOnStart, L.T("set.tipAwakeOnStart", TrayApp.AppName));
+        tips.SetToolTip(_display, L.T("tip.display"));
+        tips.SetToolTip(_autostart, L.T("tip.autostart", TrayApp.AppName));
+        tips.SetToolTip(_language, L.T("set.tipLanguage"));
 
         UpdateEnabled();
         UpdateSunInfo();
@@ -144,14 +160,14 @@ sealed class SettingsForm : Form
     {
         if (_themeLock != null)
         {
-            _sunInfo.Text = $"Hell/Dunkel ist gesperrt – von deiner Organisation verwaltet.\n({_themeLock})";
+            _sunInfo.Text = $"{L.T("set.locked")}\n({_themeLock})";
             return;
         }
         var (rise, set) = SunCalc.Get(DateTime.Today, (double)_lat.Value, (double)_lon.Value);
         int offset = (int)_offset.Value;
         _sunInfo.Text = rise is { } r && set is { } st
-            ? $"Heute: Hell ab {r.AddMinutes(offset):HH:mm}, Dunkel ab {st.AddMinutes(offset):HH:mm}"
-            : "Heute kein Sonnenauf-/untergang – es gilt der Zeitplan.";
+            ? L.T("set.sunToday", r.AddMinutes(offset).ToString("t"), st.AddMinutes(offset).ToString("t"))
+            : L.T("set.noSun");
     }
 
     void Apply()
@@ -165,17 +181,25 @@ sealed class SettingsForm : Form
         _s.SunOffsetMinutes = (int)_offset.Value;
         _s.KeepAwakeOnStart = _awakeOnStart.Checked;
         _s.KeepDisplayOn = _display.Checked;
+
+        string newLanguage = _languageCodes[Math.Max(0, _language.SelectedIndex)];
+        bool languageChanged = !newLanguage.Equals(_s.Language, StringComparison.OrdinalIgnoreCase);
+        _s.Language = newLanguage;
         _s.Save();
+
         try { Autostart.Set(_autostart.Checked); }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"{TrayApp.AppName} – Autostart", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(ex.Message, $"{TrayApp.AppName} – {L.T("err.autostart")}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
+
+        if (languageChanged)
+            MessageBox.Show(L.T("set.langRestart", TrayApp.AppName), TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
     }
 
     static ComboBox Combo(params string[] items)
     {
-        var c = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 230 };
+        var c = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 250 };
         c.Items.AddRange(items);
         return c;
     }

@@ -20,6 +20,9 @@ public sealed class AppSettings
     /// <summary>Wie ein Maus-Jiggler: verhindert zusätzlich Sperre und "Abwesend"-Status. Standard: aus.</summary>
     public bool SimulateActivity { get; set; }
 
+    /// <summary>Sprache der Oberfläche: "auto" = Windows-Anzeigesprache, sonst Code wie "en" oder "fr".</summary>
+    public string Language { get; set; } = "auto";
+
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Zeitplan;
     public ThemeTarget ThemeTarget { get; set; } = ThemeTarget.AppsUndSystem;
     public string LightFrom { get; set; } = "07:00";

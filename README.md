@@ -1,6 +1,6 @@
 # Bean me up
 
-**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 115 KB). Es braucht keine Installation, keine Adminrechte und keine Internetverbindung.
+**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 470 KB, inklusive 16 Sprachen). Es braucht keine Installation, keine Adminrechte und keine Internetverbindung.
 
 Erstellt von Simon Seidler · powered by Claude
 
@@ -25,6 +25,7 @@ Erstellt von Simon Seidler · powered by Claude
 | **Modus Zeitplan** | Wechselt zu festen Uhrzeiten (Standard: Hell ab 07:00, Dunkel ab 19:00). |
 | **Modus Sonnenstand** | Wechselt bei Sonnenauf- und -untergang für deinen Standort (offline berechnet). |
 | **Deine Vorliebe** | Wählst du im Automatikmodus selbst Hell oder Dunkel (in Bean me up oder in den Windows-Einstellungen), gilt das bis zum nächsten geplanten Wechsel. |
+| **16 Sprachen** | Übernimmt automatisch die Windows-Anzeigesprache: Deutsch, English, Français, Español, Italiano, Português, Nederlands, Polski, Čeština, Svenska, Türkçe, Русский, Українська, 日本語, 中文, 한국어 (sonst Englisch). Unter „Weitere Einstellungen › Sprache“ fest einstellbar. |
 | **Firmen-PCs** | Verbietet die Organisation das Ändern des Designs (Gruppenrichtlinie/Intune), erkennt Bean me up das, graut den Bereich Hell/Dunkel aus und zeigt „Gesperrt – von deiner Organisation verwaltet“. Wach halten funktioniert weiter. |
 | **Mit Windows starten** | Trägt Bean me up in den Autostart deines Benutzerkontos ein (ohne Installation). |
 
@@ -91,6 +92,7 @@ Windows 10 oder 11. .NET Framework 4.8 ist dort bereits enthalten.
 | `Theme.cs` | Hell/Dunkel lesen und setzen, Zeitplan, Vorliebe |
 | `SunCalc.cs` | Sonnenauf-/-untergang (offline) |
 | `AppSettings.cs` | Einstellungen (`.ini`), Autostart, Übernahme aus WachHalter |
+| `Strings.cs` | Übersetzungen (16 Sprachen) und passende Schriften für Japanisch/Chinesisch/Koreanisch |
 
 Die Fenster sind komplett im Code aufgebaut. Visual Studio öffnet sie deshalb in der Codeansicht statt im Formular-Designer.
 

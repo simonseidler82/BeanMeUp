@@ -15,22 +15,22 @@ sealed class MainWindow : Form
 {
     const double AutoHideSeconds = 12;
     const float W = 340, M = 16, Content = W - 2 * M;
-    internal const string Credits = "Erstellt von Simon Seidler · powered by Claude";
 
+    // Texte kommen aus der Übersetzungstabelle (Strings.cs)
     static readonly (string Text, TimeSpan? Duration, string Tip)[] Durations =
     [
-        ("∞", null, "Ohne Zeitlimit wach halten"),
-        ("30 Min.", TimeSpan.FromMinutes(30), "30 Minuten wach halten, danach automatisch aus"),
-        ("1 Std.", TimeSpan.FromHours(1), "1 Stunde wach halten, danach automatisch aus"),
-        ("2 Std.", TimeSpan.FromHours(2), "2 Stunden wach halten, danach automatisch aus"),
-        ("4 Std.", TimeSpan.FromHours(4), "4 Stunden wach halten, danach automatisch aus"),
+        ("∞", null, L.T("tip.durInf")),
+        (L.T("dur.30"), TimeSpan.FromMinutes(30), L.T("tip.dur30")),
+        (L.T("dur.60"), TimeSpan.FromHours(1), L.T("tip.dur60")),
+        (L.T("dur.120"), TimeSpan.FromHours(2), L.T("tip.dur120")),
+        (L.T("dur.240"), TimeSpan.FromHours(4), L.T("tip.dur240")),
     ];
 
     static readonly (string Text, string Tip)[] Modes =
     [
-        ("Manuell", "Design bleibt so, wie du es wählst"),
-        ("Zeitplan", "Wechsel zu festen Uhrzeiten (änderbar unter „Weitere Einstellungen“)"),
-        ("Sonnenstand", "Wechsel bei Sonnenauf- und -untergang für deinen Standort"),
+        (L.T("mode.manual"), L.T("tip.manual")),
+        (L.T("mode.schedule"), L.T("tip.schedule")),
+        (L.T("mode.sun"), L.T("tip.sun")),
     ];
 
     [DllImport("user32.dll")] static extern bool ReleaseCapture();
@@ -74,22 +74,21 @@ sealed class MainWindow : Form
         KeyPreview = true;
         DoubleBuffered = true;
         ClientSize = new Size(S(W), S(530));
-        Font = new Font("Segoe UI", S(12.5f), GraphicsUnit.Pixel);
-        _titleFont = new Font("Segoe UI Semibold", S(17), GraphicsUnit.Pixel);
-        _sectionFont = new Font("Segoe UI Semibold", S(11), GraphicsUnit.Pixel);
-        _smallFont = new Font("Segoe UI", S(11.5f), GraphicsUnit.Pixel);
+        Font = UiFonts.Create(S(12.5f));
+        _titleFont = new Font("Segoe UI Semibold", S(17), GraphicsUnit.Pixel); // "Bean me up" bleibt lateinisch
+        _sectionFont = UiFonts.Create(S(11), semibold: true);
+        _smallFont = UiFonts.Create(S(11.5f));
         _helpFont = new Font("Segoe UI Semibold", S(14), GraphicsUnit.Pixel);
         _header = new Rectangle(0, 0, S(W), S(64));
         _closeRect = new Rectangle(S(W - 40), S(14), S(28), S(28));
         _helpRect = new Rectangle(S(W - 72), S(14), S(28), S(28));
 
         // --- Wach halten ---
-        _awakeButton = Add(new Pill(), M, 106, Content, 34, () => _app.ToggleAwake(),
-            "Verhindert Energiesparmodus und Ruhezustand. Klick schaltet ein bzw. aus.");
+        _awakeButton = Add(new Pill(), M, 106, Content, 34, () => _app.ToggleAwake(), L.T("tip.awake"));
 
         _durationChips = new Pill[Durations.Length];
         float chipW = (Content - 4 * 4) / 5f;
-        var chipFont = new Font("Segoe UI", S(11.5f), GraphicsUnit.Pixel);
+        var chipFont = UiFonts.Create(S(11.5f));
         for (int i = 0; i < Durations.Length; i++)
         {
             var duration = Durations[i].Duration;
@@ -97,19 +96,16 @@ sealed class MainWindow : Form
                 M + i * (chipW + 4), 146, chipW, 28, () => _app.StartAwake(duration), Durations[i].Tip);
         }
 
-        _displaySwitch = Add(new ToggleSwitch { Text = "Bildschirm eingeschaltet lassen" }, M, 182, Content, 26,
-            () => _app.ToggleDisplay(), "Verhindert zusätzlich, dass sich der Bildschirm ausschaltet.");
-        _simulateSwitch = Add(new ToggleSwitch { Text = "Aktivität simulieren" }, M, 212, Content, 26,
-            () => _app.ToggleSimulateActivity(),
-            "Bewegt die Maus nach 25 s ohne Eingabe unsichtbar um 1 Pixel.\n" +
-            "Verhindert Bildschirmschoner, Sperre und „Abwesend“ (z. B. Teams).\n" +
-            "Bitte die Richtlinien deines Arbeitgebers beachten.");
+        _displaySwitch = Add(new ToggleSwitch { Text = L.T("display") }, M, 182, Content, 26,
+            () => _app.ToggleDisplay(), L.T("tip.display"));
+        _simulateSwitch = Add(new ToggleSwitch { Text = L.T("simulate") }, M, 212, Content, 26,
+            () => _app.ToggleSimulateActivity(), L.T("tip.simulate"));
 
         // --- Design ---
         float half = (Content - 4) / 2f;
-        const string themeTip = "Stellt Windows sofort um. Im Automatikmodus gilt deine Wahl bis zum nächsten geplanten Wechsel.";
-        _lightTile = Add(new Pill { Text = "Hell", Icon = Art.DrawSun }, M, 286, half, 34, () => _app.ChooseTheme(false), themeTip);
-        _darkTile = Add(new Pill { Text = "Dunkel", Icon = Art.DrawMoon }, M + half + 4, 286, half, 34, () => _app.ChooseTheme(true), themeTip);
+        string themeTip = L.T("tip.theme");
+        _lightTile = Add(new Pill { Text = L.T("light"), Icon = Art.DrawSun }, M, 286, half, 34, () => _app.ChooseTheme(false), themeTip);
+        _darkTile = Add(new Pill { Text = L.T("dark"), Icon = Art.DrawMoon }, M + half + 4, 286, half, 34, () => _app.ChooseTheme(true), themeTip);
 
         _modeChips = new Pill[Modes.Length];
         float modeW = (Content - 2 * 4) / 3f;
@@ -121,12 +117,12 @@ sealed class MainWindow : Form
         }
 
         // --- Allgemein ---
-        _autostartSwitch = Add(new ToggleSwitch { Text = "Mit Windows starten" }, M, 414, Content, 26,
-            () => _app.ToggleAutostart(), $"Startet {TrayApp.AppName} bei deiner Windows-Anmeldung – ohne Installation.");
-        Add(new Pill { Text = "Weitere Einstellungen …" }, M, 450, Content - 104, 30,
-            () => _app.ShowSettings(), "Uhrzeiten, Standort und ob Apps und/oder Taskleiste umgestellt werden.");
-        Add(new Pill { Text = "Beenden", Danger = true }, W - M - 100, 450, 100, 30,
-            () => _app.Quit(), $"{TrayApp.AppName} schließen. Danach gilt wieder das normale Energieverhalten.");
+        _autostartSwitch = Add(new ToggleSwitch { Text = L.T("autostart") }, M, 414, Content, 26,
+            () => _app.ToggleAutostart(), L.T("tip.autostart", TrayApp.AppName));
+        Add(new Pill { Text = L.T("more") }, M, 450, Content - 104, 30,
+            () => _app.ShowSettings(), L.T("tip.more"));
+        Add(new Pill { Text = L.T("quit"), Danger = true }, W - M - 100, 450, 100, 30,
+            () => _app.Quit(), L.T("tip.quit", TrayApp.AppName));
 
         _anim.Tick += (_, _) => Animate();
         RefreshState();
@@ -209,7 +205,7 @@ sealed class MainWindow : Form
 
         var awake = _app.Awake;
         _awakeButton.Primary = !awake.Active;
-        _awakeButton.Text = awake.Active ? "Wach halten beenden" : "Wach halten aktivieren";
+        _awakeButton.Text = L.T(awake.Active ? "awake.off" : "awake.on");
         for (int i = 0; i < Durations.Length; i++)
             _durationChips[i].Selected = awake.Active && _app.LastDuration == Durations[i].Duration;
         _displaySwitch.Checked = _app.Settings.KeepDisplayOn;
@@ -286,7 +282,7 @@ sealed class MainWindow : Form
         using (var dot = new SolidBrush(active ? Color.FromArgb(16, 160, 80) : p.Sub))
             g.FillEllipse(dot, S(64), S(39), S(7), S(7));
         using (var subBrush = new SolidBrush(p.Sub))
-            g.DrawString(AwakeStatus(), _smallFont, subBrush, S(74), S(34));
+            Line(g, AwakeStatus(), _smallFont, subBrush, S(74), S(34), _helpRect.Left - S(78));
 
         // Hilfe (?) und Schließen (✕ – blendet nur ins Tray aus)
         DrawHeaderButtonBackground(g, _helpRect, _helpHover);
@@ -310,10 +306,11 @@ sealed class MainWindow : Form
         }
 
         using var secBrush = new SolidBrush(p.Sub);
-        g.DrawString("Wach halten", _sectionFont, secBrush, S(M - 1), S(80));
-        g.DrawString("Design", _sectionFont, secBrush, S(M - 1), S(262));
-        g.DrawString(_themeStatus, _smallFont, secBrush, S(M - 1), S(360));
-        g.DrawString("Allgemein", _sectionFont, secBrush, S(M - 1), S(394));
+        int width = S(Content + 2);
+        Line(g, L.T("sec.awake"), _sectionFont, secBrush, S(M - 1), S(80), width);
+        Line(g, L.T("sec.design"), _sectionFont, secBrush, S(M - 1), S(262), width);
+        Line(g, _themeStatus, _smallFont, secBrush, S(M - 1), S(360), width);
+        Line(g, L.T("sec.general"), _sectionFont, secBrush, S(M - 1), S(394), width);
 
         // Fußzeile: Countdown bis zum Ausblenden – sonst Credits
         if (_autoHide)
@@ -324,14 +321,21 @@ sealed class MainWindow : Form
                 g.FillRectangle(fill, bar.X, bar.Y, bar.Width * (float)Math.Max(0, _autoHideLeft / AutoHideSeconds), bar.Height);
 
             string hint = _mouseMovedSinceShow && Bounds.Contains(Cursor.Position)
-                ? "Ausblenden pausiert"
-                : $"Wird in {Math.Ceiling(Math.Max(0, _autoHideLeft))} s in den Infobereich verschoben";
-            g.DrawString(hint, _smallFont, secBrush, S(M - 1), S(502));
+                ? L.T("hide.paused")
+                : L.T("hide.in", Math.Ceiling(Math.Max(0, _autoHideLeft)));
+            Line(g, hint, _smallFont, secBrush, S(M - 1), S(502), width);
         }
         else
         {
-            g.DrawString(Credits, _smallFont, secBrush, S(M - 1), S(500));
+            Line(g, L.Credits, _smallFont, secBrush, S(M - 1), S(500), width);
         }
+    }
+
+    /// <summary>Einzeilige Beschriftung; zu lange Texte (andere Sprachen) enden mit "…".</summary>
+    static void Line(Graphics g, string text, Font font, Brush brush, float x, float y, float width)
+    {
+        using var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+        g.DrawString(text, font, brush, new RectangleF(x, y, width, font.GetHeight(g) * 1.4f), sf);
     }
 
     void DrawHeaderButtonBackground(Graphics g, Rectangle r, bool hover)
@@ -343,9 +347,9 @@ sealed class MainWindow : Form
     }
 
     string AwakeStatus() =>
-        !_app.Awake.Active ? "Inaktiv – Energiesparmodus erlaubt"
-        : _app.Awake.Until is { } until ? $"Aktiv – noch {TrayApp.Remaining(until)}"
-        : "Aktiv – ohne Zeitlimit";
+        !_app.Awake.Active ? L.T("st.inactive")
+        : _app.Awake.Until is { } until ? L.T("st.left", TrayApp.Remaining(until))
+        : L.T("st.unlimited");
 
     // ---------- Maus & Tastatur ----------
 
@@ -356,7 +360,7 @@ sealed class MainWindow : Form
         {
             _closeHover = close;
             _helpHover = help;
-            _tips.SetToolTip(this, help ? "Hilfe & Info" : close ? "In den Infobereich ausblenden (Esc)" : "");
+            _tips.SetToolTip(this, help ? L.T("tip.help") : close ? L.T("tip.close") : "");
             Invalidate(_closeRect);
             Invalidate(_helpRect);
         }

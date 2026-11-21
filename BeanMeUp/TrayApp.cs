@@ -85,7 +85,7 @@ sealed class TrayApp : ApplicationContext
     internal void ChooseTheme(bool dark)
     {
         try { Theme.Choose(dark); }
-        catch (Exception ex) { ShowError("Design konnte nicht geändert werden", ex); }
+        catch (Exception ex) { ShowError(L.T("err.theme"), ex); }
         UpdateUi();
     }
 
@@ -102,7 +102,7 @@ sealed class TrayApp : ApplicationContext
     internal void ToggleAutostart()
     {
         try { Autostart.Set(!Autostart.IsEnabled); }
-        catch (Exception ex) { ShowError("Autostart konnte nicht geändert werden", ex); }
+        catch (Exception ex) { ShowError(L.T("err.autostart"), ex); }
         UpdateUi();
     }
 
@@ -146,14 +146,14 @@ sealed class TrayApp : ApplicationContext
     internal string ThemeStatus()
     {
         if (Theme.IsLocked)
-            return "Gesperrt – von deiner Organisation verwaltet";
+            return L.T("ts.locked");
         if (Settings.ThemeMode == ThemeMode.Manuell)
-            return "Automatik aus – Design bleibt, wie gewählt";
+            return L.T("ts.manual");
         if (Settings.OverrideDark is { } o && Settings.OverrideUntil is { } until)
-            return $"Deine Wahl ({(o ? "Dunkel" : "Hell")}) gilt bis {until:HH:mm} Uhr";
+            return L.T("ts.override", L.T(o ? "dark" : "light"), until.ToString("t"));
         return Schedule.Next(Settings, DateTime.Now) is { } next
-            ? $"Nächster Wechsel um {next.At:HH:mm} Uhr → {(next.Dark ? "Dunkel" : "Hell")}"
-            : "Automatik aktiv";
+            ? L.T("ts.next", next.At.ToString("t"), L.T(next.Dark ? "dark" : "light"))
+            : L.T("ts.auto");
     }
 
     internal static string Remaining(DateTime until)
@@ -188,10 +188,10 @@ sealed class TrayApp : ApplicationContext
         bool dark = Theme.IsDarkNow;
         _tray.Icon = Awake.Active ? _iconOn : _iconOff;
 
-        string awake = !Awake.Active ? "aus"
-            : Awake.Until is { } until ? $"noch {Remaining(until)}"
-            : "unbegrenzt";
-        string tip = $"{AppName}\nWach halten: {awake}\nDesign: {(dark ? "Dunkel" : "Hell")}";
+        string awake = !Awake.Active ? L.T("tray.off")
+            : Awake.Until is { } until ? L.T("tray.left", Remaining(until))
+            : L.T("tray.unlimited");
+        string tip = $"{AppName}\n{L.T("tray.awake", awake)}\n{L.T("tray.design", L.T(dark ? "dark" : "light"))}";
         _tray.Text = tip.Length > 63 ? tip.Substring(0, 63) : tip; // .NET Framework: max. 63 Zeichen
 
         _window.RefreshState();

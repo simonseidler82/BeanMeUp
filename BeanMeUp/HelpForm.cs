@@ -10,31 +10,8 @@ sealed class HelpForm : Form
     [DllImport("dwmapi.dll")]
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
-    static readonly (string Title, string Body)[] Sections =
-    [
-        ("Wach halten",
-         "Verhindert, dass Windows in den Energiesparmodus geht – ohne Zeitlimit (∞) oder für 30 Minuten " +
-         "bis 4 Stunden. Mit „Bildschirm eingeschaltet lassen“ bleibt auch der Monitor an. " +
-         "Sobald Bean me up beendet wird, gilt wieder das normale Energieverhalten."),
-        ("Aktivität simulieren",
-         "Bewegt die Maus nach 25 Sekunden ohne Eingabe unsichtbar um 1 Pixel hin und zurück. Das verhindert " +
-         "zusätzlich Bildschirmschoner, automatische Sperre und den Status „Abwesend“ (z. B. in Teams). " +
-         "Standardmäßig aus – bitte die Richtlinien deines Arbeitgebers beachten."),
-        ("Hell / Dunkel",
-         "„Hell“ und „Dunkel“ stellen Windows sofort um. In den Modi „Zeitplan“ und „Sonnenstand“ wechselt " +
-         "Bean me up automatisch; eine eigene Wahl gilt dann bis zum nächsten geplanten Wechsel. Uhrzeiten, " +
-         "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“. " +
-         "Verbietet deine Organisation das Ändern des Designs (z. B. per Gruppenrichtlinie), wird dieser Bereich " +
-         "ausgegraut – Wach halten funktioniert trotzdem."),
-        ("Fenster & Infobereich",
-         "Das Fenster erscheint beim Start und nach jedem Klick auf das Tassen-Symbol im Infobereich und " +
-         "verschwindet nach 12 Sekunden wieder dorthin (Maus darüber pausiert, ein Klick ins Fenster hält es offen). " +
-         "Esc oder ✕ blendet aus, F1 öffnet diese Hilfe, „Beenden“ im Fenster schließt Bean me up."),
-        ("Portabel & Datenschutz",
-         "Keine Installation, keine Adminrechte, keine Internetverbindung. Die Einstellungen liegen in " +
-         "„BeanMeUp.ini“ neben der EXE. Zum Entfernen „Mit Windows starten“ ausschalten und die EXE löschen. " +
-         "Einstellungen der Vorgängerversion „WachHalter“ werden automatisch übernommen."),
-    ];
+    // Abschnitte der Hilfe – Texte aus der Übersetzungstabelle (Strings.cs)
+    static readonly string[] SectionKeys = ["help.awake", "help.sim", "help.theme", "help.window", "help.portable"];
 
     readonly float _scale;
     readonly Font _titleFont, _sectionFont, _smallFont;
@@ -49,7 +26,7 @@ sealed class HelpForm : Form
         var p = Palette.Current;
         string version = typeof(HelpForm).Assembly.GetName().Version?.ToString(3) ?? "";
 
-        Text = $"{TrayApp.AppName} – Hilfe & Info";
+        Text = $"{TrayApp.AppName} – {L.T("help.title")}";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -61,10 +38,10 @@ sealed class HelpForm : Form
         BackColor = p.Bg;
         ForeColor = p.Text;
         KeyPreview = true;
-        Font = new Font("Segoe UI", S(12.5f), GraphicsUnit.Pixel);
-        _titleFont = new Font("Segoe UI Semibold", S(20), GraphicsUnit.Pixel);
-        _sectionFont = new Font("Segoe UI Semibold", S(13), GraphicsUnit.Pixel);
-        _smallFont = new Font("Segoe UI", S(11.5f), GraphicsUnit.Pixel);
+        Font = UiFonts.Create(S(12.5f));
+        _titleFont = new Font("Segoe UI Semibold", S(20), GraphicsUnit.Pixel); // "Bean me up" bleibt lateinisch
+        _sectionFont = UiFonts.Create(S(13), semibold: true);
+        _smallFont = UiFonts.Create(S(11.5f));
 
         int width = S(440);
         var flow = new FlowLayoutPanel
@@ -85,12 +62,15 @@ sealed class HelpForm : Form
             using var textBrush = new SolidBrush(p.Text);
             using var subBrush = new SolidBrush(p.Sub);
             e.Graphics.DrawString(TrayApp.AppName, _titleFont, textBrush, S(68), S(6));
-            e.Graphics.DrawString($"Version {version} · hält deinen PC wach · Hell/Dunkel für Windows", _smallFont, subBrush, S(70), S(36));
+            using var sf = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
+            e.Graphics.DrawString(L.T("help.subtitle", version), _smallFont, subBrush,
+                new RectangleF(S(70), S(36), width - S(70), S(20)), sf);
         };
         flow.Controls.Add(header);
 
-        foreach (var (title, body) in Sections)
+        foreach (var key in SectionKeys)
         {
+            string title = L.T(key + ".t"), body = L.T(key + ".b");
             flow.Controls.Add(new Label
             {
                 Text = title,
@@ -113,7 +93,7 @@ sealed class HelpForm : Form
 
         // Trennlinie + Credits + Schließen
         var footer = new Panel { Size = new Size(width, S(56)), Margin = new Padding(0, S(16), 0, 0) };
-        var close = new Pill { Text = "Schließen", Primary = true, Bounds = new Rectangle(width - S(110), S(18), S(110), S(32)) };
+        var close = new Pill { Text = L.T("help.close"), Primary = true, Bounds = new Rectangle(width - S(130), S(18), S(130), S(32)) };
         close.Click += (_, _) => Close();
         footer.Controls.Add(close);
         footer.Paint += (_, e) =>
@@ -122,7 +102,7 @@ sealed class HelpForm : Form
             using var line = new Pen(p.Border);
             using var subBrush = new SolidBrush(p.Sub);
             e.Graphics.DrawLine(line, 0, 0, width, 0);
-            e.Graphics.DrawString(MainWindow.Credits, _smallFont, subBrush, 0, S(18));
+            e.Graphics.DrawString(L.Credits, _smallFont, subBrush, 0, S(18));
             e.Graphics.DrawString($"© {DateTime.Now.Year} Simon Seidler", _smallFont, subBrush, 0, S(36));
         };
         flow.Controls.Add(footer);

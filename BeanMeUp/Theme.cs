@@ -18,11 +18,11 @@ static class ThemeRegistry
 
     // Windows-Richtlinien (Gruppenrichtlinie/Intune), mit denen Firmen das Ändern des Designs verbieten.
     // Werden unter HKCU und HKLM geprüft.
-    static readonly (string Path, string Name, string Text)[] Policies =
+    static readonly (string Path, string Name, string TextKey)[] Policies =
     [
-        (@"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer", "NoThemesTab", "Richtlinie „Ändern des Designs verhindern“"),
-        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoDispAppearancePage", "Richtlinie „Ändern von Farbe und Darstellung verhindern“"),
-        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoColorChoice", "Richtlinie „Ändern des Farbschemas verhindern“"),
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer", "NoThemesTab", "lock.themes"),
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoDispAppearancePage", "lock.appearance"),
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoColorChoice", "lock.color"),
     ];
 
     /// <summary>
@@ -33,15 +33,15 @@ static class ThemeRegistry
     {
         // Für Tests ohne echte Richtlinie: Umgebungsvariable BEANMEUP_TEST_THEME_LOCK=1
         if (Environment.GetEnvironmentVariable("BEANMEUP_TEST_THEME_LOCK") == "1")
-            return "Testmodus (BEANMEUP_TEST_THEME_LOCK)";
+            return L.T("lock.test");
 
         foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
-            foreach (var (path, name, text) in Policies)
+            foreach (var (path, name, textKey) in Policies)
             {
                 try
                 {
                     using var key = hive.OpenSubKey(path);
-                    if (key?.GetValue(name) is int v && v != 0) return text;
+                    if (key?.GetValue(name) is int v && v != 0) return L.T(textKey);
                 }
                 catch { /* nicht lesbar -> ignorieren */ }
             }
@@ -52,7 +52,7 @@ static class ThemeRegistry
         }
         catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException)
         {
-            return "Keine Berechtigung zum Ändern des Designs";
+            return L.T("lock.noperm");
         }
         return null;
     }
@@ -164,7 +164,7 @@ sealed class ThemeController(AppSettings s)
             catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
             {
                 // Windows verweigert das Schreiben -> wie eine Sperre behandeln (bis zum Neustart der App)
-                _applyRefused = "Windows hat das Ändern des Designs verweigert";
+                _applyRefused = L.T("lock.refused");
                 LockReason = _applyRefused;
                 _lastApplied = null;
                 return;

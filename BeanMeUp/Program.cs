@@ -28,12 +28,13 @@ static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
+        // Sprache: Windows-Anzeigesprache oder Einstellung "Language" in BeanMeUp.ini
+        L.Init(AppSettings.Load().Language);
+
         using var mutex = new Mutex(true, @"Local\BeanMeUp_SingleInstance", out bool isFirst);
         if (!isFirst)
         {
-            MessageBox.Show(
-                $"{TrayApp.AppName} läuft bereits.\n\n" +
-                "Klicke auf das Tassen-Symbol im Infobereich der Taskleiste, um das Fenster zu öffnen.",
+            MessageBox.Show(L.T("msg.running", TrayApp.AppName),
                 TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
             return;
         }
@@ -59,8 +60,7 @@ static class Program
 
     static void ShowError(Exception ex, bool fatal) =>
         MessageBox.Show(
-            (fatal ? $"{TrayApp.AppName} konnte nicht gestartet werden.\n\n"
-                   : $"In {TrayApp.AppName} ist ein Fehler aufgetreten. Das Programm läuft weiter.\n\n") +
+            L.T(fatal ? "msg.startFailed" : "msg.error", TrayApp.AppName) + "\n\n" +
             $"{ex.GetType().Name}: {ex.Message}",
             TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
 }
