@@ -1,6 +1,6 @@
 # Bean me up
 
-**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 470 KB, inklusive 16 Sprachen). Es braucht keine Installation und keine Adminrechte; ins Internet geht es nur für die (abschaltbare) tägliche Update-Prüfung.
+**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 540 KB, inklusive 16 Sprachen). Es braucht keine Installation und keine Adminrechte; ins Internet geht es nur für die (abschaltbare) tägliche Update-Prüfung.
 
 Erstellt von Simon Seidler · powered by Claude
 
