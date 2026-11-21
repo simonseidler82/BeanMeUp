@@ -102,8 +102,7 @@ sealed class HelpForm : Form
             using var line = new Pen(p.Border);
             using var subBrush = new SolidBrush(p.Sub);
             e.Graphics.DrawLine(line, 0, 0, width, 0);
-            e.Graphics.DrawString(L.Credits, _smallFont, subBrush, 0, S(18));
-            e.Graphics.DrawString($"© {DateTime.Now.Year} Simon Seidler", _smallFont, subBrush, 0, S(36));
+            e.Graphics.DrawString(L.Credits, _smallFont, subBrush, 0, S(26));
         };
         flow.Controls.Add(footer);
 

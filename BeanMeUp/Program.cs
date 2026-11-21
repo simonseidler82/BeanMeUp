@@ -5,7 +5,7 @@ namespace BeanMeUp;
 /// <summary>
 /// Bean me up – hält den PC wach und schaltet Windows automatisch zwischen Hell und Dunkel.
 /// (Vorgängername: WachHalter)
-/// Erstellt von Simon Seidler · powered by Claude.
+/// © SiS
 /// </summary>
 static class Program
 {

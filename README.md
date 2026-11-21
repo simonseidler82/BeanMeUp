@@ -2,8 +2,6 @@
 
 **Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 540 KB, inklusive 16 Sprachen). Es braucht keine Installation und keine Adminrechte; ins Internet geht es nur für die (abschaltbare) tägliche Update-Prüfung.
 
-Erstellt von Simon Seidler · powered by Claude
-
 > Früherer Name: *WachHalter*. Einstellungen und Autostart der Vorgängerversion werden beim ersten Start automatisch übernommen.
 
 ## Download
@@ -130,4 +128,4 @@ BeanMeUp\bin\Release\net48\BeanMeUp.exe --icon-export BeanMeUp\BeanMeUp.ico
 
 Bean me up steht unter der **[MIT-Lizenz](LICENSE)**: Jeder darf das Programm und den Quellcode kostenlos nutzen, verändern und weitergeben – auch kommerziell –, solange der Copyright-Hinweis erhalten bleibt. Die Nutzung erfolgt ohne Gewähr.
 
-© 2026 Simon Seidler · powered by Claude
+© 2026 SiS

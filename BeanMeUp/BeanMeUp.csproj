@@ -19,11 +19,11 @@
     <Product>Bean me up</Product>
     <Title>Bean me up</Title>
     <AssemblyTitle>Bean me up</AssemblyTitle>
-    <Description>Bean me up – hält deinen PC wach und schaltet Hell/Dunkel automatisch. Erstellt von Simon Seidler · powered by Claude</Description>
-    <Authors>Simon Seidler</Authors>
-    <Company>Simon Seidler</Company>
-    <Copyright>© 2026 Simon Seidler · powered by Claude</Copyright>
-    <Version>2.2.1</Version>
+    <Description>Bean me up – hält deinen PC wach und schaltet Hell/Dunkel automatisch.</Description>
+    <Authors>SiS</Authors>
+    <Company>SiS</Company>
+    <Copyright>© 2026 SiS</Copyright>
+    <Version>2.2.2</Version>
   </PropertyGroup>
 
   <ItemGroup>

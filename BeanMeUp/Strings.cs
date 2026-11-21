@@ -55,8 +55,8 @@ static partial class L
 
     public static string T(string key, params object[] args) => string.Format(T(key), args);
 
-    /// <summary>"Erstellt von Simon Seidler · powered by Claude" in der aktiven Sprache.</summary>
-    public static string Credits => $"{T("app.madeBy")} Simon Seidler · powered by Claude";
+    /// <summary>Dezente Fußzeile: Kürzel und Versionsnummer, z. B. "SiS · v2.2.2".</summary>
+    public static string Credits => $"SiS · v{typeof(L).Assembly.GetName().Version?.ToString(3)}";
 
     static Dictionary<string, string> Parse(string table)
     {
