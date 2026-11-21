@@ -23,7 +23,9 @@ sealed class HelpForm : Form
         ("Hell / Dunkel",
          "„Hell“ und „Dunkel“ stellen Windows sofort um. In den Modi „Zeitplan“ und „Sonnenstand“ wechselt " +
          "Bean me up automatisch; eine eigene Wahl gilt dann bis zum nächsten geplanten Wechsel. Uhrzeiten, " +
-         "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“."),
+         "Standort und ob Apps und/oder Taskleiste umgestellt werden: „Weitere Einstellungen“. " +
+         "Verbietet deine Organisation das Ändern des Designs (z. B. per Gruppenrichtlinie), wird dieser Bereich " +
+         "ausgegraut – Wach halten funktioniert trotzdem."),
         ("Fenster & Infobereich",
          "Das Fenster erscheint beim Start und nach jedem Klick auf das Tassen-Symbol im Infobereich und " +
          "verschwindet nach 12 Sekunden wieder dorthin (Maus darüber pausiert, ein Klick ins Fenster hält es offen). " +

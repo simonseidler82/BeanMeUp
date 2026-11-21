@@ -17,9 +17,13 @@ sealed class SettingsForm : Form
     readonly CheckBox _display = Check("Bildschirm anlassen");
     readonly CheckBox _autostart = Check("Mit Windows starten");
 
-    public SettingsForm(AppSettings settings)
+    /// <summary>Grund, warum Hell/Dunkel gesperrt ist (z. B. Firmenrichtlinie) – null, wenn erlaubt.</summary>
+    readonly string? _themeLock;
+
+    public SettingsForm(AppSettings settings, string? themeLock = null)
     {
         _s = settings;
+        _themeLock = themeLock;
         Text = $"{TrayApp.AppName} – Einstellungen";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -127,14 +131,22 @@ sealed class SettingsForm : Form
 
     void UpdateEnabled()
     {
-        bool time = _mode.SelectedIndex == (int)ThemeMode.Zeitplan;
-        bool sun = _mode.SelectedIndex == (int)ThemeMode.Sonnenstand;
+        bool free = _themeLock == null;
+        bool time = free && _mode.SelectedIndex == (int)ThemeMode.Zeitplan;
+        bool sun = free && _mode.SelectedIndex == (int)ThemeMode.Sonnenstand;
+        _mode.Enabled = _target.Enabled = free;
         _lightFrom.Enabled = _darkFrom.Enabled = time;
-        _lat.Enabled = _lon.Enabled = _offset.Enabled = _sunInfo.Enabled = sun;
+        _lat.Enabled = _lon.Enabled = _offset.Enabled = sun;
+        _sunInfo.Enabled = sun || !free; // Sperrhinweis bleibt gut lesbar
     }
 
     void UpdateSunInfo()
     {
+        if (_themeLock != null)
+        {
+            _sunInfo.Text = $"Hell/Dunkel ist gesperrt – von deiner Organisation verwaltet.\n({_themeLock})";
+            return;
+        }
         var (rise, set) = SunCalc.Get(DateTime.Today, (double)_lat.Value, (double)_lon.Value);
         int offset = (int)_offset.Value;
         _sunInfo.Text = rise is { } r && set is { } st

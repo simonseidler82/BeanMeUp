@@ -25,6 +25,7 @@ Erstellt von Simon Seidler · powered by Claude
 | **Modus Zeitplan** | Wechselt zu festen Uhrzeiten (Standard: Hell ab 07:00, Dunkel ab 19:00). |
 | **Modus Sonnenstand** | Wechselt bei Sonnenauf- und -untergang für deinen Standort (offline berechnet). |
 | **Deine Vorliebe** | Wählst du im Automatikmodus selbst Hell oder Dunkel (in Bean me up oder in den Windows-Einstellungen), gilt das bis zum nächsten geplanten Wechsel. |
+| **Firmen-PCs** | Verbietet die Organisation das Ändern des Designs (Gruppenrichtlinie/Intune), erkennt Bean me up das, graut den Bereich Hell/Dunkel aus und zeigt „Gesperrt – von deiner Organisation verwaltet“. Wach halten funktioniert weiter. |
 | **Mit Windows starten** | Trägt Bean me up in den Autostart deines Benutzerkontos ein (ohne Installation). |
 
 ## Bedienung
@@ -92,6 +93,14 @@ Windows 10 oder 11. .NET Framework 4.8 ist dort bereits enthalten.
 | `AppSettings.cs` | Einstellungen (`.ini`), Autostart, Übernahme aus WachHalter |
 
 Die Fenster sind komplett im Code aufgebaut. Visual Studio öffnet sie deshalb in der Codeansicht statt im Formular-Designer.
+
+### Gesperrtes Design testen
+
+Bean me up prüft die Richtlinien `NoThemesTab`, `NoDispAppearancePage` und `NoColorChoice` (unter HKCU und HKLM) und merkt sich, wenn Windows das Schreiben verweigert. Zum Testen ohne echte Richtlinie:
+
+```bash
+set BEANMEUP_TEST_THEME_LOCK=1 && BeanMeUp\bin\Release\net48\BeanMeUp.exe
+```
 
 ### Programm-Icon neu erzeugen
 

@@ -216,10 +216,15 @@ sealed class MainWindow : Form
         _simulateSwitch.Checked = _app.Settings.SimulateActivity;
 
         bool dark = _app.Theme.IsDarkNow;
+        bool themeFree = !_app.Theme.IsLocked; // gesperrt -> Design-Bereich ausgrauen
         _lightTile.Selected = !dark;
         _darkTile.Selected = dark;
+        _lightTile.Enabled = _darkTile.Enabled = themeFree;
         for (int i = 0; i < _modeChips.Length; i++)
+        {
             _modeChips[i].Selected = _app.Settings.ThemeMode == (ThemeMode)i;
+            _modeChips[i].Enabled = themeFree;
+        }
         _themeStatus = _app.ThemeStatus();
         _autostartSwitch.Checked = Autostart.IsEnabled;
 

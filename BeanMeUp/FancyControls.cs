@@ -22,6 +22,15 @@ abstract class FancyControl : Control
     protected override void OnMouseDown(MouseEventArgs e) { if (e.Button == MouseButtons.Left) { Down = true; Invalidate(); } base.OnMouseDown(e); }
     protected override void OnMouseUp(MouseEventArgs e) { Down = false; Invalidate(); base.OnMouseUp(e); }
 
+    // Ausgegraut (z. B. Design von der Firma gesperrt): kein Hand-Cursor, kein Hover-Effekt
+    protected override void OnEnabledChanged(EventArgs e)
+    {
+        Hover = Down = false;
+        Cursor = Enabled ? Cursors.Hand : Cursors.Default;
+        Invalidate();
+        base.OnEnabledChanged(e);
+    }
+
     protected static Graphics Prepare(PaintEventArgs e, Color background)
     {
         var g = e.Graphics;
@@ -51,7 +60,14 @@ sealed class Pill : FancyControl
         var g = Prepare(e, Parent?.BackColor ?? p.Bg);
 
         Color fill, fg, border;
-        if (Primary) { fill = Hover ? Art.Mix(p.Accent, Color.White, 0.1f) : p.Accent; fg = p.OnAccent; border = fill; }
+        if (!Enabled)
+        {
+            // ausgegraut; die aktuelle Auswahl bleibt leicht erkennbar
+            fill = Selected ? Art.Mix(p.Card, p.Sub, 0.18f) : p.Card;
+            fg = Art.Mix(p.Sub, p.Card, 0.25f);
+            border = p.Border;
+        }
+        else if (Primary) { fill = Hover ? Art.Mix(p.Accent, Color.White, 0.1f) : p.Accent; fg = p.OnAccent; border = fill; }
         else if (Selected) { fill = p.AccentTint; fg = p.AccentText; border = p.Accent; }
         else { fill = Hover ? p.CardHover : p.Card; fg = Danger ? p.Danger : p.Text; border = p.Border; }
         if (Down) fill = Art.Mix(fill, p.Text, 0.08f);

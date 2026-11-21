@@ -16,6 +16,47 @@ static class ThemeRegistry
     const uint SMTO_ABORTIFHUNG = 0x0002;
     static readonly IntPtr HWND_BROADCAST = new(0xFFFF);
 
+    // Windows-Richtlinien (Gruppenrichtlinie/Intune), mit denen Firmen das Ändern des Designs verbieten.
+    // Werden unter HKCU und HKLM geprüft.
+    static readonly (string Path, string Name, string Text)[] Policies =
+    [
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\Explorer", "NoThemesTab", "Richtlinie „Ändern des Designs verhindern“"),
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoDispAppearancePage", "Richtlinie „Ändern von Farbe und Darstellung verhindern“"),
+        (@"Software\Microsoft\Windows\CurrentVersion\Policies\System", "NoColorChoice", "Richtlinie „Ändern des Farbschemas verhindern“"),
+    ];
+
+    /// <summary>
+    /// Prüft, ob das Ändern von Hell/Dunkel gesperrt ist (Richtlinie der Organisation oder fehlende
+    /// Schreibrechte). Gibt den Grund zurück, sonst null.
+    /// </summary>
+    public static string? LockReason()
+    {
+        // Für Tests ohne echte Richtlinie: Umgebungsvariable BEANMEUP_TEST_THEME_LOCK=1
+        if (Environment.GetEnvironmentVariable("BEANMEUP_TEST_THEME_LOCK") == "1")
+            return "Testmodus (BEANMEUP_TEST_THEME_LOCK)";
+
+        foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
+            foreach (var (path, name, text) in Policies)
+            {
+                try
+                {
+                    using var key = hive.OpenSubKey(path);
+                    if (key?.GetValue(name) is int v && v != 0) return text;
+                }
+                catch { /* nicht lesbar -> ignorieren */ }
+            }
+
+        try
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(KeyPath, writable: true);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            return "Keine Berechtigung zum Ändern des Designs";
+        }
+        return null;
+    }
+
     public static bool IsDark(ThemeTarget target)
     {
         using var key = Registry.CurrentUser.OpenSubKey(KeyPath);
@@ -80,11 +121,24 @@ static class Schedule
 sealed class ThemeController(AppSettings s)
 {
     bool? _lastApplied;
+    string? _applyRefused;
 
     public bool IsDarkNow => ThemeRegistry.IsDark(s.ThemeTarget);
 
+    /// <summary>Grund, warum Hell/Dunkel nicht geändert werden darf – null, wenn alles erlaubt ist.</summary>
+    public string? LockReason { get; private set; }
+    public bool IsLocked => LockReason != null;
+
     public void Tick()
     {
+        // Gesperrt (z. B. Firmenrichtlinie)? Dann nur noch anzeigen, nichts ändern.
+        LockReason = _applyRefused ?? ThemeRegistry.LockReason();
+        if (IsLocked)
+        {
+            _lastApplied = null;
+            return;
+        }
+
         var now = DateTime.Now;
         bool current = ThemeRegistry.IsDark(s.ThemeTarget);
 
@@ -102,13 +156,27 @@ sealed class ThemeController(AppSettings s)
 
         bool desired = Desired(now);
         if (desired != current)
-            ThemeRegistry.Apply(desired, s.ThemeTarget);
+        {
+            try
+            {
+                ThemeRegistry.Apply(desired, s.ThemeTarget);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+            {
+                // Windows verweigert das Schreiben -> wie eine Sperre behandeln (bis zum Neustart der App)
+                _applyRefused = "Windows hat das Ändern des Designs verweigert";
+                LockReason = _applyRefused;
+                _lastApplied = null;
+                return;
+            }
+        }
         _lastApplied = desired;
     }
 
     /// <summary>Benutzer wählt Hell/Dunkel direkt im Menü.</summary>
     public void Choose(bool dark)
     {
+        if (IsLocked) return;
         SetPreference(dark);
         Tick();
     }

@@ -38,6 +38,29 @@ static class Program
             return;
         }
 
-        Application.Run(new TrayApp());
+        // Nie mehr kommentarlos verschwinden: unerwartete Fehler werden angezeigt
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => ShowError(e.Exception, fatal: false);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            ShowError(e.ExceptionObject as Exception ?? new Exception("Unbekannter Fehler"), fatal: true);
+
+        TrayApp app;
+        try
+        {
+            app = new TrayApp();
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex, fatal: true);
+            return;
+        }
+        Application.Run(app);
     }
+
+    static void ShowError(Exception ex, bool fatal) =>
+        MessageBox.Show(
+            (fatal ? $"{TrayApp.AppName} konnte nicht gestartet werden.\n\n"
+                   : $"In {TrayApp.AppName} ist ein Fehler aufgetreten. Das Programm läuft weiter.\n\n") +
+            $"{ex.GetType().Name}: {ex.Message}",
+            TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
 }

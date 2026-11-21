@@ -31,7 +31,8 @@ sealed class TrayApp : ApplicationContext
         Autostart.MigrateLegacy();
         if (Settings.KeepAwakeOnStart)
             Awake.Start(null, Settings.KeepDisplayOn);
-        Theme.Tick();
+        // Ein Fehler beim Design (z. B. von der Firma gesperrt) darf den Start nie verhindern
+        try { Theme.Tick(); } catch { /* wird beim nächsten Tick erneut versucht */ }
 
         _window = new MainWindow(this);
         // Das Fenster hat den WinForms-SynchronizationContext installiert
@@ -90,10 +91,11 @@ sealed class TrayApp : ApplicationContext
 
     internal void SetMode(ThemeMode mode)
     {
+        if (Theme.IsLocked) return;
         if (mode == ThemeMode.Manuell)
             Settings.ManualDark = Theme.IsDarkNow; // aktuelles Design beibehalten
         Settings.ThemeMode = mode;
-        Theme.Reset();
+        try { Theme.Reset(); } catch { /* beim nächsten Tick erneut versuchen */ }
         UpdateUi();
     }
 
@@ -111,13 +113,13 @@ sealed class TrayApp : ApplicationContext
             _settingsForm.Activate();
             return;
         }
-        var form = new SettingsForm(Settings);
+        var form = new SettingsForm(Settings, Theme.LockReason);
         form.FormClosed += (_, _) =>
         {
             if (form.DialogResult == DialogResult.OK)
             {
                 Awake.SetKeepDisplayOn(Settings.KeepDisplayOn);
-                Theme.Reset();
+                try { Theme.Reset(); } catch { /* beim nächsten Tick erneut versuchen */ }
                 UpdateUi();
             }
             _settingsForm = null;
@@ -143,6 +145,8 @@ sealed class TrayApp : ApplicationContext
 
     internal string ThemeStatus()
     {
+        if (Theme.IsLocked)
+            return "Gesperrt – von deiner Organisation verwaltet";
         if (Settings.ThemeMode == ThemeMode.Manuell)
             return "Automatik aus – Design bleibt, wie gewählt";
         if (Settings.OverrideDark is { } o && Settings.OverrideUntil is { } until)
