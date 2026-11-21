@@ -1,24 +1,33 @@
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
+
 namespace BeanMeUp;
 
-/// <summary>Kleines Einstellungsfenster (komplett im Code aufgebaut, kein Designer nötig).</summary>
+/// <summary>
+/// Einstellungsfenster im Stil der Windows-11-Einstellungen: Abschnitte als helle Karten
+/// auf grauem Grund (komplett im Code aufgebaut, kein Designer nötig).
+/// </summary>
 [System.ComponentModel.DesignerCategory("Code")]
 sealed class SettingsForm : Form
 {
+    // Farben wie in den Windows-11-Einstellungen (helles Design; die Standard-Steuerelemente sind immer hell)
+    static readonly Color BgColor = Color.FromArgb(243, 243, 243);
+    static readonly Color CardColor = Color.FromArgb(251, 251, 251);
+    static readonly Color BorderColor = Color.FromArgb(229, 229, 229);
+    static readonly Color TextColor = Color.FromArgb(27, 27, 27);
+    static readonly Color SubColor = Color.FromArgb(97, 97, 97);
+
+    readonly float _scale;
+    int S(float v) => (int)Math.Round(v * _scale);
+
     readonly AppSettings _s;
-    readonly ComboBox _mode = Combo(L.T("mode.manual"), L.T("set.modeSchedule"), L.T("set.modeSun"));
-    readonly ComboBox _target = Combo(L.T("set.targetBoth"), L.T("set.targetApps"), L.T("set.targetSystem"));
-    readonly ComboBox _language = Combo();
-    readonly DateTimePicker _lightFrom = TimePicker();
-    readonly DateTimePicker _darkFrom = TimePicker();
-    readonly NumericUpDown _lat = Num(-90, 90, 4);
-    readonly NumericUpDown _lon = Num(-180, 180, 4);
-    readonly NumericUpDown _offset = Num(-180, 180, 0);
-    readonly Label _sunInfo = new() { AutoSize = true, Margin = new Padding(3, 3, 3, 6) };
-    readonly CheckBox _awakeOnStart = Check(L.T("set.awakeOnStart"));
-    readonly CheckBox _display = Check(L.T("set.display"));
-    readonly CheckBox _autostart = Check(L.T("autostart"));
-    readonly CheckBox _updates = Check(L.T("set.updates"));
-    readonly Button _checkNow = new() { Text = L.T("set.checkNow"), AutoSize = true, Margin = new Padding(12, 0, 3, 0) };
+    readonly ComboBox _mode, _target, _language;
+    readonly DateTimePicker _lightFrom, _darkFrom;
+    readonly NumericUpDown _lat, _lon, _offset;
+    readonly Label _sunInfo;
+    readonly CheckBox _awakeOnStart, _display, _autostart, _updates;
+    readonly Button _checkNow;
+    readonly Font _headerFont, _smallFont;
     readonly Action<UpdateResult>? _onUpdateChecked;
 
     /// <summary>Grund, warum Hell/Dunkel gesperrt ist (z. B. Firmenrichtlinie) – null, wenn erlaubt.</summary>
@@ -27,8 +36,14 @@ sealed class SettingsForm : Form
     /// <summary>Sprachcodes passend zu den Einträgen in _language ("auto" zuerst).</summary>
     readonly List<string> _languageCodes = ["auto"];
 
+    /// <summary>true, wenn mit OK geschlossen wurde (die Einstellungen sind dann gespeichert).</summary>
+    public bool Accepted { get; private set; }
+
     public SettingsForm(AppSettings settings, string? themeLock = null, Action<UpdateResult>? onUpdateChecked = null)
     {
+        using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            _scale = g.DpiX / 96f;
+
         _s = settings;
         _themeLock = themeLock;
         _onUpdateChecked = onUpdateChecked;
@@ -38,65 +53,159 @@ sealed class SettingsForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        AutoScaleMode = AutoScaleMode.Dpi;
+        AutoScaleMode = AutoScaleMode.None; // Größen werden selbst mit S() skaliert
         AutoSize = true;
         AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        Padding = new Padding(12);
+        BackColor = BgColor;
+        ForeColor = TextColor;
+        Font = UiFonts.Create(S(13));
+        _headerFont = UiFonts.Create(S(14), semibold: true);
+        _smallFont = UiFonts.Create(S(12));
 
-        var grid = new TableLayoutPanel { ColumnCount = 2, AutoSize = true, Dock = DockStyle.Fill };
-        int row = 0;
-        void Row(string label, Control c)
+        _mode = Combo(L.T("mode.manual"), L.T("set.modeSchedule"), L.T("set.modeSun"));
+        _target = Combo(L.T("set.targetBoth"), L.T("set.targetApps"), L.T("set.targetSystem"));
+        _language = Combo();
+        _lightFrom = TimePicker();
+        _darkFrom = TimePicker();
+        _lat = Num(-90, 90, 4);
+        _lon = Num(-180, 180, 4);
+        _offset = Num(-180, 180, 0);
+        _sunInfo = new Label
         {
-            grid.Controls.Add(new Label { Text = label, AutoSize = true, Anchor = AnchorStyles.Left, Margin = new Padding(3, 6, 12, 3) }, 0, row);
-            grid.Controls.Add(c, 1, row++);
-        }
-        void Full(Control c)
-        {
-            grid.Controls.Add(c, 0, row++);
-            grid.SetColumnSpan(c, 2);
-        }
-
-        Full(Header(L.T("set.secTheme")));
-        Row(L.T("set.mode"), _mode);
-        Row(L.T("set.target"), _target);
-        Row(L.T("set.lightFrom"), _lightFrom);
-        Row(L.T("set.darkFrom"), _darkFrom);
-        Row(L.T("set.lat"), _lat);
-        Row(L.T("set.lon"), _lon);
-        Row(L.T("set.offset"), _offset);
-        Full(_sunInfo);
-        Full(Header(L.T("sec.awake")));
-        Full(_awakeOnStart);
-        Full(_display);
-        Full(Header(L.T("set.secSystem")));
-        Full(_autostart);
-        var updateRow = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
-        updateRow.Controls.AddRange([_updates, _checkNow]);
-        Full(updateRow);
-        Row(L.T("set.language"), _language);
-        Full(new Label
-        {
-            Text = L.Credits,
             AutoSize = true,
-            ForeColor = SystemColors.GrayText,
-            Margin = new Padding(3, 14, 3, 0),
-        });
+            ForeColor = SubColor,
+            BackColor = CardColor,
+            Font = _smallFont,
+            MaximumSize = new Size(CardInner, 0),
+            Margin = new Padding(0, S(6), 0, S(2)),
+            UseMnemonic = false,
+        };
+        _awakeOnStart = Check(L.T("set.awakeOnStart"));
+        _display = Check(L.T("set.display"));
+        _autostart = Check(L.T("autostart"));
+        _updates = Check(L.T("set.updates"));
+        _checkNow = new Button
+        {
+            Text = L.T("set.checkNow"),
+            AutoSize = true,
+            MinimumSize = new Size(S(100), S(30)),
+            Padding = new Padding(S(8), 0, S(8), 0),
+            Margin = new Padding(S(16), S(2), 0, S(2)),
+            Anchor = AnchorStyles.Left,
+            BackColor = SystemColors.Control,
+            UseVisualStyleBackColor = true,
+        };
 
-        var ok = new Button { Text = L.T("set.ok"), DialogResult = DialogResult.OK, AutoSize = true };
-        var cancel = new Button { Text = L.T("set.cancel"), DialogResult = DialogResult.Cancel, AutoSize = true };
+        var page = new FlowLayoutPanel
+        {
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Padding = new Padding(S(24), S(16), S(24), 0),
+            Margin = new Padding(0),
+        };
+
+        // Abschnitt "Hell / Dunkel"
+        page.Controls.Add(Header(L.T("set.secTheme")));
+        var theme = Card();
+        Row(theme, L.T("set.mode"), _mode);
+        Row(theme, L.T("set.target"), _target);
+        Row(theme, L.T("set.lightFrom"), _lightFrom);
+        Row(theme, L.T("set.darkFrom"), _darkFrom);
+        Row(theme, L.T("set.lat"), _lat);
+        Row(theme, L.T("set.lon"), _lon);
+        Row(theme, L.T("set.offset"), _offset);
+        Full(theme, _sunInfo);
+        page.Controls.Add(theme);
+
+        // Abschnitt "Wach halten"
+        page.Controls.Add(Header(L.T("sec.awake")));
+        var awake = Card();
+        Full(awake, _awakeOnStart);
+        Full(awake, _display);
+        page.Controls.Add(awake);
+
+        // Abschnitt "System"
+        page.Controls.Add(Header(L.T("set.secSystem")));
+        var system = Card();
+        Full(system, _autostart);
+        var updateRow = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
+            BackColor = CardColor,
+            Margin = new Padding(0),
+        };
+        _updates.Anchor = AnchorStyles.Left;
+        updateRow.Controls.AddRange([_updates, _checkNow]);
+        Full(system, updateRow);
+        Row(system, L.T("set.language"), _language);
+        page.Controls.Add(system);
+
+        // Fußleiste: Credits links, OK/Abbrechen rechts
+        var ok = new Button { Text = L.T("set.ok") };
+        var cancel = new Button { Text = L.T("set.cancel") };
+        foreach (var b in new[] { ok, cancel })
+        {
+            b.AutoSize = true;
+            b.MinimumSize = new Size(S(92), S(32));
+            b.Padding = new Padding(S(8), 0, S(8), 0);
+            b.BackColor = SystemColors.Control;
+            b.UseVisualStyleBackColor = true;
+        }
+        ok.Margin = new Padding(0, 0, S(8), 0);
+        cancel.Margin = new Padding(0);
+        // Das Fenster ist nicht modal (das Hauptfenster bleibt bedienbar). DialogResult an den
+        // Buttons würde es deshalb NICHT schließen – darum hier ausdrücklich schließen.
+        ok.Click += (_, _) =>
+        {
+            Apply();
+            Accepted = true;
+            Close();
+        };
+        cancel.Click += (_, _) => Close();
+
+        int footerWidth = CardWidth + S(48);
+        var footer = new Panel { Size = new Size(footerWidth, S(64)), Margin = new Padding(0, S(20), 0, 0), BackColor = BgColor };
         var buttons = new FlowLayoutPanel
         {
-            FlowDirection = FlowDirection.RightToLeft,
             AutoSize = true,
-            Anchor = AnchorStyles.Right,
-            Margin = new Padding(0, 12, 0, 0),
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            WrapContents = false,
+            BackColor = BgColor,
         };
-        buttons.Controls.AddRange([cancel, ok]);
-        Full(buttons);
+        buttons.Controls.AddRange([ok, cancel]);
+        footer.Controls.Add(buttons);
+        footer.Layout += (_, _) =>
+            buttons.Location = new Point(footer.Width - S(24) - buttons.Width, (footer.Height - buttons.Height) / 2 + S(4));
+        footer.Paint += (_, e) =>
+        {
+            e.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            using var line = new Pen(BorderColor);
+            e.Graphics.DrawLine(line, 0, 0, footer.Width, 0);
+            int textWidth = footer.Width - S(24) - buttons.Width - S(12) - S(24);
+            TextRenderer.DrawText(e.Graphics, L.Credits, _smallFont,
+                new Rectangle(S(24), S(4), Math.Max(S(40), textWidth), footer.Height - S(4)), SubColor,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
+                TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+        };
 
-        Controls.Add(grid);
-        AcceptButton = ok;
-        CancelButton = cancel;
+        var root = new FlowLayoutPanel
+        {
+            FlowDirection = FlowDirection.TopDown,
+            WrapContents = false,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Margin = new Padding(0),
+        };
+        root.Controls.Add(page);
+        root.Controls.Add(footer);
+        Controls.Add(root);
+        AcceptButton = ok;      // Enter = OK
+        CancelButton = cancel;  // Esc = Abbrechen
+        ActiveControl = ok;     // keine blau markierte Auswahlliste beim Öffnen
 
         // Sprachauswahl: "Automatisch (Systemsprache)" + alle übersetzten Sprachen in ihrer eigenen Schreibweise
         _language.Items.Add(L.T("set.langAuto"));
@@ -125,7 +234,6 @@ sealed class SettingsForm : Form
         _lat.ValueChanged += (_, _) => UpdateSunInfo();
         _lon.ValueChanged += (_, _) => UpdateSunInfo();
         _offset.ValueChanged += (_, _) => UpdateSunInfo();
-        FormClosing += (_, _) => { if (DialogResult == DialogResult.OK) Apply(); };
 
         // Kleine Hilfe: Tooltips an allen Feldern
         var tips = new ToolTip { AutoPopDelay = 15000, InitialDelay = 500 };
@@ -152,9 +260,125 @@ sealed class SettingsForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) Components.Dispose();
+        if (disposing)
+        {
+            Components.Dispose();
+            _headerFont.Dispose();
+            _smallFont.Dispose();
+        }
         base.Dispose(disposing);
     }
+
+    // ---------- Aufbau ----------
+
+    int CardWidth => S(480);
+    int CardPad => S(18);
+    int CardInner => CardWidth - 2 * CardPad;
+    int LabelWidth => S(190);
+
+    /// <summary>Helle Karte mit abgerundetem Rahmen; zwei Spalten (Beschriftung | Steuerelement).</summary>
+    TableLayoutPanel Card()
+    {
+        var card = new TableLayoutPanel
+        {
+            ColumnCount = 2,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            MinimumSize = new Size(CardWidth, 0),
+            MaximumSize = new Size(CardWidth, 0),
+            Padding = new Padding(CardPad, S(10), CardPad, S(10)),
+            Margin = new Padding(0, 0, 0, S(8)),
+            BackColor = BgColor,
+        };
+        card.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, LabelWidth));
+        card.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        card.Paint += (_, e) =>
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            var r = new RectangleF(0.5f, 0.5f, card.Width - 1.5f, card.Height - 1.5f);
+            using var path = Art.RoundRect(r, S(7));
+            using var fill = new SolidBrush(CardColor);
+            using var pen = new Pen(BorderColor);
+            e.Graphics.FillPath(fill, path);
+            e.Graphics.DrawPath(pen, path);
+        };
+        return card;
+    }
+
+    void Row(TableLayoutPanel card, string label, Control control)
+    {
+        int row = card.RowCount++;
+        card.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        card.Controls.Add(new Label
+        {
+            Text = label,
+            AutoSize = true,
+            MaximumSize = new Size(LabelWidth - S(12), 0),
+            Anchor = AnchorStyles.Left,
+            BackColor = CardColor,
+            UseMnemonic = false,
+            Margin = new Padding(0, S(7), S(12), S(7)),
+        }, 0, row);
+        control.Anchor = AnchorStyles.Left;
+        control.Margin = new Padding(0, S(5), 0, S(5));
+        card.Controls.Add(control, 1, row);
+    }
+
+    static void Full(TableLayoutPanel card, Control control)
+    {
+        int row = card.RowCount++;
+        card.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        card.Controls.Add(control, 0, row);
+        card.SetColumnSpan(control, 2);
+    }
+
+    Label Header(string text) => new()
+    {
+        Text = text,
+        AutoSize = true,
+        Font = _headerFont,
+        UseMnemonic = false,
+        Margin = new Padding(S(2), S(12), 0, S(8)),
+    };
+
+    ComboBox Combo(params string[] items)
+    {
+        var c = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = S(230) };
+        c.Items.AddRange(items);
+        return c;
+    }
+
+    DateTimePicker TimePicker() => new()
+    {
+        Format = DateTimePickerFormat.Custom,
+        CustomFormat = "HH:mm",
+        ShowUpDown = true,
+        Width = S(96),
+    };
+
+    NumericUpDown Num(int min, int max, int decimals) => new()
+    {
+        Minimum = min,
+        Maximum = max,
+        DecimalPlaces = decimals,
+        Increment = decimals > 0 ? 0.1m : 5,
+        Width = S(96),
+        TextAlign = HorizontalAlignment.Right,
+    };
+
+    CheckBox Check(string text) => new()
+    {
+        Text = text,
+        AutoSize = true,
+        BackColor = CardColor,
+        UseMnemonic = false,
+        Margin = new Padding(0, S(6), 0, S(6)),
+        Padding = new Padding(S(2), 0, 0, 0),
+    };
+
+    static decimal Clamp(double value, int min, int max) => (decimal)Math.Max(min, Math.Min(max, value));
+
+    // ---------- Verhalten ----------
 
     void UpdateEnabled()
     {
@@ -186,8 +410,8 @@ sealed class SettingsForm : Form
     {
         _checkNow.Enabled = false;
         var result = await UpdateChecker.CheckAsync();
-        _checkNow.Enabled = true;
         if (IsDisposed) return;
+        _checkNow.Enabled = true;
 
         _onUpdateChecked?.Invoke(result);
         if (result.Error != null)
@@ -227,46 +451,10 @@ sealed class SettingsForm : Form
         try { Autostart.Set(_autostart.Checked); }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, $"{TrayApp.AppName} – {L.T("err.autostart")}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, ex.Message, $"{TrayApp.AppName} – {L.T("err.autostart")}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         if (languageChanged)
-            MessageBox.Show(L.T("set.langRestart", TrayApp.AppName), TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
+            MessageBox.Show(this, L.T("set.langRestart", TrayApp.AppName), TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
     }
-
-    static ComboBox Combo(params string[] items)
-    {
-        var c = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 250 };
-        c.Items.AddRange(items);
-        return c;
-    }
-
-    static DateTimePicker TimePicker() => new()
-    {
-        Format = DateTimePickerFormat.Custom,
-        CustomFormat = "HH:mm",
-        ShowUpDown = true,
-        Width = 90,
-    };
-
-    static NumericUpDown Num(int min, int max, int decimals) => new()
-    {
-        Minimum = min,
-        Maximum = max,
-        DecimalPlaces = decimals,
-        Increment = decimals > 0 ? 0.1m : 5,
-        Width = 90,
-    };
-
-    static decimal Clamp(double value, int min, int max) => (decimal)Math.Max(min, Math.Min(max, value));
-
-    static CheckBox Check(string text) => new() { Text = text, AutoSize = true };
-
-    static Label Header(string text) => new()
-    {
-        Text = text,
-        AutoSize = true,
-        Font = new Font(DefaultFont, FontStyle.Bold),
-        Margin = new Padding(0, 10, 0, 4),
-    };
 }

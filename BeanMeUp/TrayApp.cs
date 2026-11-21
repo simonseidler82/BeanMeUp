@@ -131,7 +131,7 @@ sealed class TrayApp : ApplicationContext
         var form = new SettingsForm(Settings, Theme.LockReason, result => ApplyUpdateResult(result, fromUser: true));
         form.FormClosed += (_, _) =>
         {
-            if (form.DialogResult == DialogResult.OK)
+            if (form.Accepted)
             {
                 Awake.SetKeepDisplayOn(Settings.KeepDisplayOn);
                 try { Theme.Reset(); } catch { /* beim nächsten Tick erneut versuchen */ }
