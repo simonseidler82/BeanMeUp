@@ -1,6 +1,6 @@
 # Bean me up
 
-**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 470 KB, inklusive 16 Sprachen). Es braucht keine Installation, keine Adminrechte und keine Internetverbindung.
+**Bean me up** hält deinen Windows-PC wach und schaltet Windows automatisch zwischen hellem und dunklem Design um. Das Programm ist eine einzelne, portable EXE-Datei (ca. 470 KB, inklusive 16 Sprachen). Es braucht keine Installation und keine Adminrechte; ins Internet geht es nur für die (abschaltbare) tägliche Update-Prüfung.
 
 Erstellt von Simon Seidler · powered by Claude
 
@@ -28,6 +28,7 @@ Erstellt von Simon Seidler · powered by Claude
 | **16 Sprachen** | Übernimmt automatisch die Windows-Anzeigesprache: Deutsch, English, Français, Español, Italiano, Português, Nederlands, Polski, Čeština, Svenska, Türkçe, Русский, Українська, 日本語, 中文, 한국어 (sonst Englisch). Unter „Weitere Einstellungen › Sprache“ fest einstellbar. |
 | **Firmen-PCs** | Verbietet die Organisation das Ändern des Designs (Gruppenrichtlinie/Intune), erkennt Bean me up das, graut den Bereich Hell/Dunkel aus und zeigt „Gesperrt – von deiner Organisation verwaltet“. Wach halten funktioniert weiter. |
 | **Mit Windows starten** | Trägt Bean me up in den Autostart deines Benutzerkontos ein (ohne Installation). |
+| **Update-Hinweis** | Fragt einmal täglich bei GitHub nach einer neuen Version. Gibt es eine, erscheint eine Windows-Benachrichtigung (einmal pro Version) und ein Hinweis im Fenster; ein Klick öffnet die Download-Seite. Es wird nichts automatisch heruntergeladen. Abschaltbar unter „Weitere Einstellungen“, dort auch „Jetzt prüfen“. |
 
 ## Bedienung
 
@@ -52,7 +53,9 @@ Das Symbol ist eine lächelnde Kaffeetasse vor Sonne und Mond in der Abenddämme
 
 ## Datenschutz
 
-Bean me up sammelt keine Daten, sendet nichts ins Internet und braucht keine Internetverbindung. Alles läuft lokal auf deinem PC; die einzigen gespeicherten Daten sind deine Einstellungen in der `.ini`-Datei.
+Bean me up sammelt keine Daten. Alles läuft lokal auf deinem PC; die einzigen gespeicherten Daten sind deine Einstellungen in der `.ini`-Datei.
+
+Die einzige Internetverbindung ist die **tägliche Update-Prüfung**: eine Anfrage an `api.github.com`, ob es einen neueren Release gibt. Dabei werden keine persönlichen Daten gesendet – GitHub sieht nur deine IP-Adresse und die Programmversion, wie bei jedem Webseitenaufruf. Die Prüfung lässt sich unter „Weitere Einstellungen“ abschalten; dann geht Bean me up überhaupt nicht ins Internet.
 
 ## Hinweis zu „Aktivität simulieren“
 
@@ -92,7 +95,8 @@ Windows 10 oder 11. .NET Framework 4.8 ist dort bereits enthalten.
 | `Theme.cs` | Hell/Dunkel lesen und setzen, Zeitplan, Vorliebe |
 | `SunCalc.cs` | Sonnenauf-/-untergang (offline) |
 | `AppSettings.cs` | Einstellungen (`.ini`), Autostart, Übernahme aus WachHalter |
-| `Strings.cs` | Übersetzungen (16 Sprachen) und passende Schriften für Japanisch/Chinesisch/Koreanisch |
+| `Strings.cs`, `StringsUpdates.cs` | Übersetzungen (16 Sprachen) und passende Schriften für Japanisch/Chinesisch/Koreanisch |
+| `UpdateChecker.cs` | Tägliche Update-Prüfung über die GitHub-API |
 
 Die Fenster sind komplett im Code aufgebaut. Visual Studio öffnet sie deshalb in der Codeansicht statt im Formular-Designer.
 
@@ -102,6 +106,14 @@ Bean me up prüft die Richtlinien `NoThemesTab`, `NoDispAppearancePage` und `NoC
 
 ```bash
 set BEANMEUP_TEST_THEME_LOCK=1 && BeanMeUp\bin\Release\net48\BeanMeUp.exe
+```
+
+### Update-Hinweis testen
+
+Mit der Umgebungsvariable `BEANMEUP_TEST_CURRENT_VERSION` lässt sich eine ältere installierte Version vortäuschen (der Zeitpunkt der letzten Prüfung steht in `LastUpdateCheck` in der `.ini`):
+
+```bash
+set BEANMEUP_TEST_CURRENT_VERSION=1.0.0 && BeanMeUp\bin\Release\net48\BeanMeUp.exe
 ```
 
 ### Programm-Icon neu erzeugen

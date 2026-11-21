@@ -17,6 +17,9 @@ sealed class SettingsForm : Form
     readonly CheckBox _awakeOnStart = Check(L.T("set.awakeOnStart"));
     readonly CheckBox _display = Check(L.T("set.display"));
     readonly CheckBox _autostart = Check(L.T("autostart"));
+    readonly CheckBox _updates = Check(L.T("set.updates"));
+    readonly Button _checkNow = new() { Text = L.T("set.checkNow"), AutoSize = true, Margin = new Padding(12, 0, 3, 0) };
+    readonly Action<UpdateResult>? _onUpdateChecked;
 
     /// <summary>Grund, warum Hell/Dunkel gesperrt ist (z. B. Firmenrichtlinie) – null, wenn erlaubt.</summary>
     readonly string? _themeLock;
@@ -24,10 +27,11 @@ sealed class SettingsForm : Form
     /// <summary>Sprachcodes passend zu den Einträgen in _language ("auto" zuerst).</summary>
     readonly List<string> _languageCodes = ["auto"];
 
-    public SettingsForm(AppSettings settings, string? themeLock = null)
+    public SettingsForm(AppSettings settings, string? themeLock = null, Action<UpdateResult>? onUpdateChecked = null)
     {
         _s = settings;
         _themeLock = themeLock;
+        _onUpdateChecked = onUpdateChecked;
         Text = $"{TrayApp.AppName} – {L.T("set.title")}";
         Icon = Art.WindowIcon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -66,6 +70,9 @@ sealed class SettingsForm : Form
         Full(_display);
         Full(Header(L.T("set.secSystem")));
         Full(_autostart);
+        var updateRow = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0) };
+        updateRow.Controls.AddRange([_updates, _checkNow]);
+        Full(updateRow);
         Row(L.T("set.language"), _language);
         Full(new Label
         {
@@ -111,6 +118,8 @@ sealed class SettingsForm : Form
         _awakeOnStart.Checked = _s.KeepAwakeOnStart;
         _display.Checked = _s.KeepDisplayOn;
         _autostart.Checked = Autostart.IsEnabled;
+        _updates.Checked = _s.CheckForUpdates;
+        _checkNow.Click += async (_, _) => await CheckNowAsync();
 
         _mode.SelectedIndexChanged += (_, _) => UpdateEnabled();
         _lat.ValueChanged += (_, _) => UpdateSunInfo();
@@ -132,6 +141,8 @@ sealed class SettingsForm : Form
         tips.SetToolTip(_display, L.T("tip.display"));
         tips.SetToolTip(_autostart, L.T("tip.autostart", TrayApp.AppName));
         tips.SetToolTip(_language, L.T("set.tipLanguage"));
+        tips.SetToolTip(_updates, L.T("set.tipUpdates"));
+        tips.SetToolTip(_checkNow, L.T("set.tipUpdates"));
 
         UpdateEnabled();
         UpdateSunInfo();
@@ -170,6 +181,31 @@ sealed class SettingsForm : Form
             : L.T("set.noSun");
     }
 
+    /// <summary>"Jetzt prüfen": sofort bei GitHub nachfragen und das Ergebnis anzeigen.</summary>
+    async System.Threading.Tasks.Task CheckNowAsync()
+    {
+        _checkNow.Enabled = false;
+        var result = await UpdateChecker.CheckAsync();
+        _checkNow.Enabled = true;
+        if (IsDisposed) return;
+
+        _onUpdateChecked?.Invoke(result);
+        if (result.Error != null)
+        {
+            MessageBox.Show(this, L.T("upd.failed", result.Error), TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
+        }
+        else if (result.IsNewer && result.Latest != null)
+        {
+            if (MessageBox.Show(this, L.T("upd.newer", result.Latest.ToString(3)), TrayApp.AppName,
+                    MessageBoxButtons.YesNo, MessageBoxIcon.None) == DialogResult.Yes)
+                UpdateChecker.OpenPage(result.Url);
+        }
+        else
+        {
+            MessageBox.Show(this, L.T("upd.current", UpdateChecker.Current.ToString(3)), TrayApp.AppName, MessageBoxButtons.OK, MessageBoxIcon.None);
+        }
+    }
+
     void Apply()
     {
         _s.ThemeMode = (ThemeMode)_mode.SelectedIndex;
@@ -181,6 +217,7 @@ sealed class SettingsForm : Form
         _s.SunOffsetMinutes = (int)_offset.Value;
         _s.KeepAwakeOnStart = _awakeOnStart.Checked;
         _s.KeepDisplayOn = _display.Checked;
+        _s.CheckForUpdates = _updates.Checked;
 
         string newLanguage = _languageCodes[Math.Max(0, _language.SelectedIndex)];
         bool languageChanged = !newLanguage.Equals(_s.Language, StringComparison.OrdinalIgnoreCase);

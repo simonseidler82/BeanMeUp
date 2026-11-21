@@ -16,6 +16,12 @@ sealed class TrayApp : ApplicationContext
     /// <summary>Zuletzt gewählte Dauer (null = unbegrenzt).</summary>
     internal TimeSpan? LastDuration { get; private set; }
 
+    /// <summary>Neuere Version auf GitHub (null = keine bekannt) und ihre Download-Seite.</summary>
+    internal string? UpdateVersion { get; private set; }
+    internal string UpdateUrl { get; private set; } = UpdateChecker.ReleasesPage;
+    bool _updateCheckRunning;
+    readonly System.Windows.Forms.Timer _firstUpdateCheck = new() { Interval = 15_000 };
+
     readonly NotifyIcon _tray;
     readonly MainWindow _window;
     readonly System.Windows.Forms.Timer _timer = new() { Interval = 30_000 };
@@ -42,6 +48,15 @@ sealed class TrayApp : ApplicationContext
         // Es blendet sich wie beim Start nach 12 s wieder aus. Beenden gibt es im Fenster selbst.
         _tray = new NotifyIcon { Icon = _iconOff, Text = AppName, Visible = true };
         _tray.MouseUp += (_, _) => _window.ShowWindow(autoHide: true);
+        _tray.BalloonTipClicked += (_, _) => UpdateChecker.OpenPage(UpdateUrl);
+
+        // Bereits bekannte neuere Version (aus einer früheren Prüfung) gleich anzeigen
+        if (Settings.CheckForUpdates && Version.TryParse(Settings.AvailableVersion, out var known) && UpdateChecker.IsNewer(known))
+            UpdateVersion = Settings.AvailableVersion;
+
+        // Erste Update-Prüfung 15 s nach dem Start, danach über den 30-s-Takt höchstens 1× täglich
+        _firstUpdateCheck.Tick += (_, _) => { _firstUpdateCheck.Stop(); MaybeCheckForUpdates(); };
+        _firstUpdateCheck.Start();
 
         _timer.Tick += (_, _) => OnTick();
         _timer.Start();
@@ -113,7 +128,7 @@ sealed class TrayApp : ApplicationContext
             _settingsForm.Activate();
             return;
         }
-        var form = new SettingsForm(Settings, Theme.LockReason);
+        var form = new SettingsForm(Settings, Theme.LockReason, result => ApplyUpdateResult(result, fromUser: true));
         form.FormClosed += (_, _) =>
         {
             if (form.DialogResult == DialogResult.OK)
@@ -142,6 +157,55 @@ sealed class TrayApp : ApplicationContext
     }
 
     internal void Quit() => ExitThread();
+
+    // ---------- Update-Prüfung (1× täglich, abschaltbar) ----------
+
+    void MaybeCheckForUpdates()
+    {
+        if (!Settings.CheckForUpdates || _updateCheckRunning) return;
+        if (Settings.LastUpdateCheck is { } last && DateTime.Now - last < TimeSpan.FromHours(24)) return;
+
+        _updateCheckRunning = true;
+        UpdateChecker.CheckAsync().ContinueWith(t => _ui.Post(_ =>
+        {
+            _updateCheckRunning = false;
+            ApplyUpdateResult(t.Result, fromUser: false);
+        }, null));
+    }
+
+    /// <summary>Ergebnis einer Prüfung übernehmen (automatisch oder über "Jetzt prüfen").</summary>
+    internal void ApplyUpdateResult(UpdateResult result, bool fromUser)
+    {
+        if (result.Error != null)
+        {
+            // Kein Netz o. Ä.: in etwa einer Stunde erneut versuchen
+            Settings.LastUpdateCheck = DateTime.Now - TimeSpan.FromHours(23);
+            Settings.Save();
+            return;
+        }
+
+        Settings.LastUpdateCheck = DateTime.Now;
+        if (result.IsNewer && result.Latest != null)
+        {
+            string version = result.Latest.ToString(3);
+            UpdateVersion = version;
+            UpdateUrl = result.Url;
+            Settings.AvailableVersion = version;
+            if (!fromUser && Settings.NotifiedVersion != version)
+            {
+                // Pro neuer Version nur einmal benachrichtigen
+                Settings.NotifiedVersion = version;
+                _tray.ShowBalloonTip(10_000, L.T("upd.balloonTitle", AppName, version), L.T("upd.balloonText"), ToolTipIcon.Info);
+            }
+        }
+        else
+        {
+            UpdateVersion = null;
+            Settings.AvailableVersion = "";
+        }
+        Settings.Save();
+        UpdateUi();
+    }
 
     internal string ThemeStatus()
     {
@@ -174,6 +238,7 @@ sealed class TrayApp : ApplicationContext
         if (Awake.Active && Settings.SimulateActivity)
             ActivitySimulator.NudgeIfIdle(TimeSpan.FromSeconds(25));
         try { Theme.Tick(); } catch { /* beim nächsten Tick erneut versuchen */ }
+        MaybeCheckForUpdates();
         UpdateUi();
     }
 
@@ -203,6 +268,7 @@ sealed class TrayApp : ApplicationContext
     protected override void ExitThreadCore()
     {
         _timer.Stop();
+        _firstUpdateCheck.Stop();
         SystemEvents.PowerModeChanged -= OnPowerModeChanged;
         Awake.Stop();
         _settingsForm?.Close();

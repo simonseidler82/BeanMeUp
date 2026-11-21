@@ -23,6 +23,14 @@ public sealed class AppSettings
     /// <summary>Sprache der Oberfläche: "auto" = Windows-Anzeigesprache, sonst Code wie "en" oder "fr".</summary>
     public string Language { get; set; } = "auto";
 
+    /// <summary>Einmal täglich bei GitHub nach einer neuen Version fragen (abschaltbar).</summary>
+    public bool CheckForUpdates { get; set; } = true;
+    public DateTime? LastUpdateCheck { get; set; }
+    /// <summary>Zuletzt gefundene neuere Version (für den Hinweis im Fenster, auch nach Neustart).</summary>
+    public string AvailableVersion { get; set; } = "";
+    /// <summary>Version, für die schon eine Benachrichtigung gezeigt wurde (nur einmal pro Version).</summary>
+    public string NotifiedVersion { get; set; } = "";
+
     public ThemeMode ThemeMode { get; set; } = ThemeMode.Zeitplan;
     public ThemeTarget ThemeTarget { get; set; } = ThemeTarget.AppsUndSystem;
     public string LightFrom { get; set; } = "07:00";

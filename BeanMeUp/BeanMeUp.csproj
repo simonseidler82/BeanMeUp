@@ -23,7 +23,7 @@
     <Authors>Simon Seidler</Authors>
     <Company>Simon Seidler</Company>
     <Copyright>© 2026 Simon Seidler · powered by Claude</Copyright>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

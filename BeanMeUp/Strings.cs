@@ -7,7 +7,7 @@ namespace BeanMeUp;
 /// in BeanMeUp.ini). Unbekannte Sprachen fallen auf Englisch zurück, fehlende Texte ebenfalls.
 /// Format je Sprache: eine Zeile pro Text "schlüssel=Text", "\n" steht für einen Zeilenumbruch.
 /// </summary>
-static class L
+static partial class L
 {
     /// <summary>Verfügbare Sprachen mit Namen in der jeweiligen Sprache.</summary>
     public static readonly (string Code, string Name)[] Languages =
@@ -20,10 +20,11 @@ static class L
 
     static readonly Dictionary<string, Dictionary<string, string>> Tables = new()
     {
-        ["de"] = Parse(De), ["en"] = Parse(En), ["fr"] = Parse(Fr), ["es"] = Parse(Es),
-        ["it"] = Parse(It), ["pt"] = Parse(Pt), ["nl"] = Parse(Nl), ["pl"] = Parse(Pl),
-        ["cs"] = Parse(Cs), ["sv"] = Parse(Sv), ["tr"] = Parse(Tr), ["ru"] = Parse(Ru),
-        ["uk"] = Parse(Uk), ["ja"] = Parse(Ja), ["zh"] = Parse(Zh), ["ko"] = Parse(Ko),
+        // Basis-Texte + Ergänzungen aus StringsUpdates.cs (spätere Einträge überschreiben frühere)
+        ["de"] = Parse(De + "\n" + De2), ["en"] = Parse(En + "\n" + En2), ["fr"] = Parse(Fr + "\n" + Fr2), ["es"] = Parse(Es + "\n" + Es2),
+        ["it"] = Parse(It + "\n" + It2), ["pt"] = Parse(Pt + "\n" + Pt2), ["nl"] = Parse(Nl + "\n" + Nl2), ["pl"] = Parse(Pl + "\n" + Pl2),
+        ["cs"] = Parse(Cs + "\n" + Cs2), ["sv"] = Parse(Sv + "\n" + Sv2), ["tr"] = Parse(Tr + "\n" + Tr2), ["ru"] = Parse(Ru + "\n" + Ru2),
+        ["uk"] = Parse(Uk + "\n" + Uk2), ["ja"] = Parse(Ja + "\n" + Ja2), ["zh"] = Parse(Zh + "\n" + Zh2), ["ko"] = Parse(Ko + "\n" + Ko2),
     };
 
     /// <summary>Aktive Sprache (zweistelliger Code).</summary>

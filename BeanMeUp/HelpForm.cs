@@ -11,7 +11,7 @@ sealed class HelpForm : Form
     static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
 
     // Abschnitte der Hilfe – Texte aus der Übersetzungstabelle (Strings.cs)
-    static readonly string[] SectionKeys = ["help.awake", "help.sim", "help.theme", "help.window", "help.portable"];
+    static readonly string[] SectionKeys = ["help.awake", "help.sim", "help.theme", "help.window", "help.update", "help.portable"];
 
     readonly float _scale;
     readonly Font _titleFont, _sectionFont, _smallFont;

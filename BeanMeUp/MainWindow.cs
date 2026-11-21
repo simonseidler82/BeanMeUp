@@ -312,7 +312,10 @@ sealed class MainWindow : Form
         Line(g, _themeStatus, _smallFont, secBrush, S(M - 1), S(360), width);
         Line(g, L.T("sec.general"), _sectionFont, secBrush, S(M - 1), S(394), width);
 
-        // Fußzeile: Countdown bis zum Ausblenden – sonst Credits
+        // Fußzeile: Countdown bis zum Ausblenden – sonst Credits. Ein verfügbares Update hat Vorrang
+        // (anklickbarer Hinweis in Akzentfarbe).
+        string? update = UpdateNotice();
+        using var linkBrush = new SolidBrush(p.AccentText);
         if (_autoHide)
         {
             var bar = new RectangleF(S(M), S(496), S(Content), Math.Max(1, S(2)));
@@ -323,13 +326,19 @@ sealed class MainWindow : Form
             string hint = _mouseMovedSinceShow && Bounds.Contains(Cursor.Position)
                 ? L.T("hide.paused")
                 : L.T("hide.in", Math.Ceiling(Math.Max(0, _autoHideLeft)));
-            Line(g, hint, _smallFont, secBrush, S(M - 1), S(502), width);
+            Line(g, update ?? hint, _smallFont, update != null ? linkBrush : secBrush, S(M - 1), S(502), width);
         }
         else
         {
-            Line(g, L.Credits, _smallFont, secBrush, S(M - 1), S(500), width);
+            Line(g, update ?? L.Credits, _smallFont, update != null ? linkBrush : secBrush, S(M - 1), S(500), width);
         }
     }
+
+    /// <summary>Text "Neue Version … verfügbar" – null, wenn kein Update bekannt oder die Prüfung aus ist.</summary>
+    string? UpdateNotice() =>
+        _app.Settings.CheckForUpdates && _app.UpdateVersion is { } v ? L.T("upd.footer", v) : null;
+
+    Rectangle FooterRect => new(0, S(488), ClientSize.Width, S(42));
 
     /// <summary>Einzeilige Beschriftung; zu lange Texte (andere Sprachen) enden mit "…".</summary>
     static void Line(Graphics g, string text, Font font, Brush brush, float x, float y, float width)
@@ -356,6 +365,8 @@ sealed class MainWindow : Form
     protected override void OnMouseMove(MouseEventArgs e)
     {
         bool close = _closeRect.Contains(e.Location), help = _helpRect.Contains(e.Location);
+        bool updateLink = UpdateNotice() != null && FooterRect.Contains(e.Location);
+        Cursor = close || help || updateLink ? Cursors.Hand : Cursors.Default;
         if (close != _closeHover || help != _helpHover)
         {
             _closeHover = close;
@@ -390,6 +401,10 @@ sealed class MainWindow : Form
         else if (_helpRect.Contains(e.Location))
         {
             _app.ShowHelp();
+        }
+        else if (UpdateNotice() != null && FooterRect.Contains(e.Location))
+        {
+            UpdateChecker.OpenPage(_app.UpdateUrl);
         }
         else if (_header.Contains(e.Location))
         {
